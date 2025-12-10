@@ -1,0 +1,269 @@
+// Sporvit MVP - Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTH & USERS
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  goals         UserGoals?
+  scannedProducts ScannedProduct[]
+  meals         Meal[]
+  workouts      Workout[]
+  progress      ProgressTracking[]
+  recipes       Recipe[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// USER PROFILE
+// ============================================
+
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Biometrics
+  age           Int
+  gender        String // male, female, other
+  heightCm      Float
+  currentWeight Float
+  bodyFat       Float?
+
+  // Activity
+  activityLevel String // sedentary, light, moderate, active
+  workoutDaysPerWeek Int @default(0)
+
+  // Preferences
+  dietType      String? // omnivore, vegetarian, vegan, keto, paleo
+  allergies     String[]
+  excludedIngredients String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserGoals {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Goals
+  goalType   String // cut, bulk, maintain, recomp
+  goalSpeed  String? // slow, moderate, aggressive
+  targetWeight Float
+  targetDate DateTime?
+
+  // Calculated targets
+  targetCalories Int
+  targetProteinG Int
+  targetCarbsG   Int
+  targetFatG     Int
+
+  // Metrics
+  bmr  Int
+  tdee Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// PRODUCTS & NUTRITION
+// ============================================
+
+model ScannedProduct {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Product info
+  barcode     String
+  productName String
+  brands      String?
+  categories  String[]
+
+  // Scores
+  nutriscoreGrade String? // A, B, C, D, E
+  novaGroup       Int?    // 1, 2, 3, 4
+  ecoscoreGrade   String?
+
+  // Nutritional data (per 100g)
+  energyKcal      Float?
+  proteinsG       Float?
+  carbohydratesG  Float?
+  fatG            Float?
+  fiberG          Float?
+  saltG           Float?
+
+  // User serving
+  servingSizeG Float?
+
+  // Sporvit scoring
+  sporvitScore String? // GREEN, YELLOW, RED
+  scoreReason  String?
+
+  imageUrl   String?
+  scannedAt  DateTime @default(now())
+
+  @@index([userId, scannedAt])
+}
+
+model Meal {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date     DateTime
+  mealType String // breakfast, lunch, dinner, snack
+
+  // Totals
+  totalCalories Int
+  totalProteinG Float
+  totalCarbsG   Float
+  totalFatG     Float
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// ============================================
+// TRAINING
+// ============================================
+
+model Workout {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date        DateTime
+  workoutType String // strength, cardio, hiit, rest
+
+  title            String
+  description      String?
+  durationMinutes  Int
+  estimatedCalories Int
+
+  completed          Boolean   @default(false)
+  completedAt        DateTime?
+  actualDurationMin  Int?
+  actualCalories     Int?
+
+  // AI adaptation
+  adaptedFromCalories Int?
+  adaptationReason    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// ============================================
+// PROGRESS
+// ============================================
+
+model ProgressTracking {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date DateTime @unique
+
+  // Metrics
+  weightKg          Float?
+  bodyFatPercentage Float?
+
+  // Measurements (cm)
+  waistCm Float?
+  chestCm Float?
+  hipsCm  Float?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+// ============================================
+// RECIPES
+// ============================================
+
+model Recipe {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  servings           Int
+  caloriesPerServing Int
+  prepTimeMinutes    Int?
+  cookTimeMinutes    Int?
+
+  favorited Boolean @default(false)
+  rating    Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
