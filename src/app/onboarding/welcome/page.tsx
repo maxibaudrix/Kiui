@@ -15,7 +15,7 @@ export default function OnboardingWelcomePage() {
       </div>
 
       {/* Main Container */}
-      <div className="relative w-full max-w-4xl">
+      <div className="relative max-w-4xl mx-auto w-full px-4">
         
         {/* Logo y Badge Superior */}
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
