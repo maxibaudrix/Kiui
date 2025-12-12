@@ -11,7 +11,7 @@ export const authConfig = {
   secret: process.env.AUTH_SECRET,
   pages: {
     signIn: "/login",
-    newUser: "/onboarding/step-1-biometrics", // Redirige aquí después del registro
+    newUser: "/onboarding/welcome", // Redirige aquí después del registro
   },
   providers: [
     // Google OAuth
