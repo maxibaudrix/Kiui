@@ -142,58 +142,7 @@ const SporvitLanding = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">
-      {/* Header/Navbar */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-slate-950/95 backdrop-blur-lg shadow-lg shadow-emerald-500/10' : 'bg-transparent'}`}>
-        <nav className="container mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/50">
-                <Dumbbell className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                Sporvit
-              </span>
-            </div>
-
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-slate-300 hover:text-emerald-400 transition-colors">Features</a>
-              <a href="#how-it-works" className="text-slate-300 hover:text-emerald-400 transition-colors">Cómo funciona</a>
-              <a href="#pricing" className="text-slate-300 hover:text-emerald-400 transition-colors">Precios</a>
-              <a href="/calculators" className="text-slate-300 hover:text-emerald-400 transition-colors">Calculadoras</a>
-              <a href="/login" className="text-slate-300 hover:text-emerald-400 transition-colors">Login</a>
-              <button className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full font-semibold hover:shadow-lg hover:shadow-emerald-500/50 transition-all transform hover:scale-105">
-                Empezar Gratis
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden p-2 text-slate-300 hover:text-emerald-400"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top">
-              <a href="#features" className="block py-2 text-slate-300 hover:text-emerald-400">Features</a>
-              <a href="#how-it-works" className="block py-2 text-slate-300 hover:text-emerald-400">Cómo funciona</a>
-              <a href="#pricing" className="block py-2 text-slate-300 hover:text-emerald-400">Precios</a>
-              <a href="/calculators" className="block py-2 text-slate-300 hover:text-emerald-400">Calculadoras</a>
-              <a href="/login" className="block py-2 text-slate-300 hover:text-emerald-400">Login</a>
-              <button className="w-full px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full font-semibold">
-                Empezar Gratis
-              </button>
-            </div>
-          )}
-        </nav>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">   
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 relative overflow-hidden">
         {/* Animated Background Elements */}
