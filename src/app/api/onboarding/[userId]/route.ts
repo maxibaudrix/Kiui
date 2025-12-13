@@ -1,7 +1,6 @@
 // src/app/api/onboarding/[userId]/route.ts
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from "next-auth";
 import { auth } from '@/lib/auth'; // Reemplazar con la ruta correcta a tu configuración
 import { prisma } from '@/lib/db'; // Asumiendo que /lib/db.ts contiene la instancia de prisma
 
@@ -23,7 +22,7 @@ interface OnboardingParams {
  */
 export async function GET(request: Request, { params }: OnboardingParams) {
   // 1. AUTENTICACIÓN Y AUTORIZACIÓN
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   
   // Asegurar que haya sesión y que el usuario esté autorizado a ver los datos
   if (!session || !session.user || !session.user.id) {
