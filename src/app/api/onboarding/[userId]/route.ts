@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
-import { authOptions } from '@/lib/auth'; // Reemplazar con la ruta correcta a tu configuración
+import { auth } from '@/lib/auth'; // Reemplazar con la ruta correcta a tu configuración
 import { prisma } from '@/lib/db'; // Asumiendo que /lib/db.ts contiene la instancia de prisma
 
 /**
