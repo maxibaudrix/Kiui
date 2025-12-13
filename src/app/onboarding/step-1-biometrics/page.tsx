@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, User, Ruler, Scale, Activity, Info, CheckCircle2 } from 'lucide-react';
 
-// Definición de la interfaz para el estado de los datos biométricos
+// 1. Definición de Interfaces para el Estado del Formulario
 interface BiometricsData {
-  age: string;
+  age: string; // Se mantiene como string para la entrada de texto
   gender: 'MALE' | 'FEMALE' | 'OTHER' | '';
   height: string;
   weight: string;
   bodyFatPercentage: string;
 }
 
+// 2. Definición de Tipos para los Errores (strings de mensajes)
+type BiometricsErrors = Partial<Record<keyof BiometricsData, string | null>>;
+
 export default function Step1BiometricsPage() {
-  // Inicialización del estado usando la interfaz BiometricsData
+  // 3. Aplicación de Tipado a useState
   const [formData, setFormData] = useState<BiometricsData>({
     age: '',
     gender: '',
@@ -20,49 +23,46 @@ export default function Step1BiometricsPage() {
     bodyFatPercentage: ''
   });
 
-  // Tipado de errores como un subconjunto opcional de BiometricsData
-  const [errors, setErrors] = useState<Partial<BiometricsData>>({});
+  const [errors, setErrors] = useState<BiometricsErrors>({});
 
+  // 4. Tipado de handleChange
   const handleChange = (field: keyof BiometricsData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      // Elimina el error al cambiar el campo
-      setErrors(prev => ({ ...prev, [field]: undefined })); 
+      setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
   const validate = () => {
-    const newErrors: Partial<BiometricsData> = {};
-
-    // 🛑 Conversión explícita de string a number para las comparaciones (Corrige error 2365)
-    const age = Number(formData.age);
-    const height = Number(formData.height);
-    const weight = Number(formData.weight);
-    // Usamos Number() solo si hay un valor, sino lo dejamos como nulo para el chequeo de opcional
-    const bodyFatPercentage = formData.bodyFatPercentage ? Number(formData.bodyFatPercentage) : null;
+    // 5. Tipado explícito de newErrors (esto soluciona el error 2322)
+    const newErrors: BiometricsErrors = {};
     
-    // Validación de Edad
-    if (!formData.age || age < 15 || age > 100) {
+    // Convertir a número para validación
+    const age = Number(formData.age);
+    if (!age || age < 15 || age > 100) {
       newErrors.age = 'Edad debe estar entre 15 y 100 años';
     }
     
-    // Validación de Género
+    // Validación de Género (ahora correcta)
     if (!formData.gender) {
       newErrors.gender = 'Selecciona tu género';
     }
     
-    // Validación de Altura
-    if (!formData.height || height < 120 || height > 250) {
+    // Convertir a número para validación
+    const height = Number(formData.height);
+    if (!height || height < 120 || height > 250) {
       newErrors.height = 'Altura debe estar entre 120 y 250 cm';
     }
     
-    // Validación de Peso
-    if (!formData.weight || weight < 30 || weight > 300) {
+    // Convertir a número para validación
+    const weight = Number(formData.weight);
+    if (!weight || weight < 30 || weight > 300) {
       newErrors.weight = 'Peso debe estar entre 30 y 300 kg';
     }
 
-    // Validación de Porcentaje de Grasa Corporal (opcional)
-    if (bodyFatPercentage !== null && (bodyFatPercentage < 3 || bodyFatPercentage > 60)) {
+    // Convertir a número para validación opcional
+    const bfp = Number(formData.bodyFatPercentage);
+    if (formData.bodyFatPercentage !== '' && (bfp < 3 || bfp > 60)) {
       newErrors.bodyFatPercentage = 'Porcentaje debe estar entre 3% y 60%';
     }
 
@@ -74,13 +74,11 @@ export default function Step1BiometricsPage() {
     if (validate()) {
       console.log('Form valid, navigating to step 2...', formData);
       alert('✅ Datos guardados. Pasando al Step 2...');
-      // Aquí iría la lógica de navegación (por ejemplo, router.push('/step-2'))
     }
   };
 
   const handleBack = () => {
     console.log('Back to welcome');
-    // Aquí iría la lógica para volver al paso anterior
   };
 
   const progress = (1 / 6) * 100;
@@ -173,8 +171,8 @@ export default function Step1BiometricsPage() {
                   <button
                     key={g.value}
                     type="button"
-                    // Asegura que el tipo 'gender' coincida con la interfaz BiometricsData
-                    onClick={() => handleChange('gender', g.value as BiometricsData['gender'])} 
+                    // Se asegura que el valor de retorno sea uno de los tipos permitidos
+                    onClick={() => handleChange('gender', g.value as 'MALE' | 'FEMALE' | 'OTHER')}
                     className={`relative p-4 text-center rounded-xl border-2 transition-all ${
                       formData.gender === g.value
                         ? 'bg-gradient-to-br from-emerald-600 to-teal-600 border-emerald-500 shadow-lg shadow-emerald-500/30 scale-105'
