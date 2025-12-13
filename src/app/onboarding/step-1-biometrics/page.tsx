@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, User, Ruler, Scale, Activity, Info, CheckCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
 
 // 1. Definición de Interfaces para el Estado del Formulario
 interface BiometricsData {
@@ -25,6 +27,8 @@ export default function Step1BiometricsPage() {
   });
 
   const [errors, setErrors] = useState<BiometricsErrors>({});
+
+  const router = useRouter();
 
   // 4. Tipado de handleChange
   const handleChange = (field: keyof BiometricsData, value: string) => {
@@ -74,7 +78,7 @@ export default function Step1BiometricsPage() {
   const handleSubmit = () => {
     if (validate()) {
       console.log('Form valid, navigating to step 2...', formData);
-      alert('✅ Datos guardados. Pasando al Step 2...');
+      router.push('/onboarding/step-2-objective');
     }
   };
 
