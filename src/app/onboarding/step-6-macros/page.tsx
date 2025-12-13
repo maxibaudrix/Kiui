@@ -3,6 +3,41 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, TrendingUp, Dumbbell, Utensils, Activity, AlertCircle, Edit, Loader2 } from 'lucide-react';
 
+// 1. DEFINE TYPES FOR COMPLEX OBJECTS (Phases and Macros)
+interface PlanningPhases {
+  base: number;
+  build: number;
+  peak: number;
+  taper: number;
+  recovery: number;
+}
+
+interface Macros {
+  protein: number;
+  carbs: number;
+  fat: number;
+  proteinPercent: number;
+  carbsPercent: number;
+  fatPercent: number;
+}
+
+// 2. DEFINE THE MAIN INTERFACE FOR THE useMemo RESULT
+interface CalculationsResult {
+  bmr: number;
+  neat: number;
+  tdeeBase: number;
+  trainingCaloriesPerDay: number;
+  tdee: number;
+  targetCalories: number;
+  trainingDayCalories: number;
+  restDayCalories: number;
+  macros: Macros;
+  blockSize: number;
+  totalBlocks: number;
+  phases: PlanningPhases;
+}
+
+
 export default function Step6ReviewPage() {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -15,7 +50,8 @@ export default function Step6ReviewPage() {
     nutrition: { dietType: 'omnivore', mealsPerDay: 4, allergies: [], intolerances: ['lactose'], excludedFoods: ['Mariscos'], cookingFrequency: 'regularly' }
   };
 
-  const calculations = useMemo(() => {
+  // 3. APPLY THE TYPE TO THE useMemo HOOK
+  const calculations: CalculationsResult = useMemo(() => {
     const { age, gender, weight, height } = mockOnboardingData.biometrics;
     let bmr = gender === 'male' ? 10 * weight + 6.25 * height - 5 * age + 5 : 10 * weight + 6.25 * height - 5 * age - 161;
     const activityMultipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
@@ -31,7 +67,10 @@ export default function Step6ReviewPage() {
     
     const { targetTimeline, hasCompetition } = mockOnboardingData.objective;
     let blockSize = targetTimeline <= 8 ? 2 : targetTimeline <= 16 ? 4 : 6;
-    let phases = {};
+    
+    // Initialize phases with the correct type and default values
+    let phases: PlanningPhases = { base: 0, build: 0, peak: 0, taper: 0, recovery: 0 };
+    
     if (hasCompetition) {
       const taperWeeks = targetTimeline >= 12 ? 2 : 1;
       const buildableWeeks = targetTimeline - taperWeeks - 1;

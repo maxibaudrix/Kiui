@@ -23,24 +23,29 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
+  // Relations (AUTH)
   accounts        Account[]
   sessions        Session[]
+  
+  // Relations (ONBOARDING & PLANS)
   profile         UserProfile?
   goals           UserGoals?
-  scannedProducts ScannedProduct[]
-  meals           Meal[]
-  workouts        Workout[]
-  progress        ProgressTracking[]
-  recipes         Recipe[]
+  onboardingData  OnboardingData? // AGREGADO
+  generatedPlans  GeneratedPlan[] // AGREGADO
+  aiLogs          AIGenerationLog[] // AGREGADO
 
-  // ADDED RELATIONS
-  weightEntries  WeightEntry[] // For WeightEntry
-  measurements   BodyMeasurement[] // For BodyMeasurement
-  progressPhotos ProgressPhoto[] // For ProgressPhoto
-  diaryMeals     DiaryMeal[] // For DiaryMeal
-  plannedMeals   PlannedMeal[] // For PlannedMeal
-  dailyWater     DailyWater[] // For DailyWater
+  // Relations (PROGRESS & TRACKING)
+  scannedProducts ScannedProduct[]
+  meals           Meal[] // OLD MEAL
+  workouts        Workout[]
+  progress        ProgressTracking[] // OLD PROGRESS
+  recipes         Recipe[]
+  weightEntries   WeightEntry[] // For WeightEntry
+  measurements    BodyMeasurement[] // For BodyMeasurement
+  progressPhotos  ProgressPhoto[] // For ProgressPhoto
+  diaryMeals      DiaryMeal[] // For DiaryMeal (new)
+  plannedMeals    PlannedMeal[] // For PlannedMeal
+  dailyWater      DailyWater[] // For DailyWater
 }
 
 model Account {
@@ -56,8 +61,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -77,6 +81,7 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
 // ============================================
 // ONBOARDING DATA STORAGE
 // ============================================
@@ -151,24 +156,11 @@ model AIGenerationLog {
   // Status
   success   Boolean
   error     String?
-  
   createdAt DateTime @default(now())
   
   @@index([userId, createdAt])
 }
 
-// ============================================
-// ACTUALIZAR User MODEL
-// ============================================
-
-model User {
-  // ... campos existentes ...
-  
-  // AGREGAR ESTAS RELACIONES:
-  onboardingData OnboardingData?
-  generatedPlans GeneratedPlan[]
-  aiLogs         AIGenerationLog[]
-}
 // ============================================
 // USER PROFILE
 // ============================================
@@ -189,17 +181,17 @@ model UserProfile {
   activityLevel      String // sedentary, light, moderate, active
   workoutDaysPerWeek Int    @default(0)
 
-  // Activity
+  // Activity details
   dailySteps   String?
   sittingHours String?
   workType     String?
 
   //  Training Level
   trainingLevel   String?
-  trainingTypes   String?
+  trainingTypes   String? // Puede ser el sportType o un resumen.
   sessionDuration Int?
   intensity       String?
-
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -212,12 +204,12 @@ model UserGoals {
   // Goals
   goalType     String // cut, bulk, maintain, recomp
   goalSpeed    String? // slow, moderate, aggressive
-  targetWeight Float
+  targetWeight Float // Falta este campo en el onboarding, se asume que se calcula o se pide aparte.
 
   // Preferences
-  dietType            String? // omnivore, vegetarian, vegan, keto, paleo
+  dietType            String?
   allergies           String?
-  excludedIngredients String?
+  excludedIngredients String? // Puede ser intolerancias + excludedFoods
 
   targetDate DateTime?
 
@@ -252,9 +244,9 @@ model ScannedProduct {
 
   // Scores
   nutriscoreGrade String? // A, B, C, D, E
-  novaGroup       Int? // 1, 2, 3, 4
-  ecoscoreGrade   String?
-
+  novaGroup       Int?    // 1, 2, 3, 4
+  ecoscoreGrade   String? 
+  
   // Nutritional data (per 100g)
   energyKcal     Float?
   proteinsG      Float?
@@ -265,7 +257,7 @@ model ScannedProduct {
 
   // User serving
   servingSizeG Float?
-
+  
   // Sporvit scoring
   sporvitScore String? // GREEN, YELLOW, RED
   scoreReason  String?
@@ -294,8 +286,21 @@ model Meal {
   totalFatG     Float
 
   notes String?
-
   createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+model DiaryMeal {
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  date        DateTime // Fecha en la que se consume la comida (solo la fecha, la hora está en createdAt)
+  mealType    String // breakfast, lunch, dinner, snacks
+  productId   String
+  product     ScannedProduct @relation(fields: [productId], references: [id])
+  servingSize Float // gramos
+  createdAt   DateTime       @default(now()) // Hora exacta de registro
 
   @@index([userId, date])
 }
@@ -325,7 +330,6 @@ model Workout {
   // AI adaptation
   adaptedFromCalories Int?
   adaptationReason    String?
-
   createdAt DateTime @default(now())
 
   @@index([userId, date])
@@ -352,7 +356,6 @@ model ProgressTracking {
   hipsCm  Float?
 
   notes String?
-
   createdAt DateTime @default(now())
 
   @@index([userId, date])
@@ -407,7 +410,6 @@ model Recipe {
 
   title       String
   description String?
-
   servings           Int
   caloriesPerServing Int
   prepTimeMinutes    Int?
@@ -420,26 +422,9 @@ model Recipe {
 
   favorited Boolean @default(false)
   rating    Int?
-
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
-}
-
-// NOTA: Se asume que los modelos `User` y `ScannedProduct` ya existen.
-
-model DiaryMeal {
-  id          String         @id @default(uuid())
-  userId      String
-  user        User           @relation(fields: [userId], references: [id])
-  date        DateTime // Fecha en la que se consume la comida (solo la fecha, la hora está en createdAt)
-  mealType    String // breakfast, lunch, dinner, snacks
-  productId   String
-  product     ScannedProduct @relation(fields: [productId], references: [id])
-  servingSize Float // gramos
-  createdAt   DateTime       @default(now()) // Hora exacta de registro
-
-  @@index([userId, date])
 }
 
 // ============================================\
