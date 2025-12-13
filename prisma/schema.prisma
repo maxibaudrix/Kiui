@@ -77,7 +77,98 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+// ============================================
+// ONBOARDING DATA STORAGE
+// ============================================
 
+model OnboardingData {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // JSON completo del onboarding
+  data      Json     // Almacena OnboardingOutputComplete
+  
+  // Status
+  status    String   @default("completed") // draft, completed, archived
+  version   String   @default("1.0.0")
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId, status])
+}
+
+// ============================================
+// GENERATED PLANS
+// ============================================
+
+model GeneratedPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Plan metadata
+  planType  String   // "training", "nutrition", "complete"
+  startDate DateTime
+  endDate   DateTime
+  
+  // Plan data (JSON)
+  planData  Json     // Estructura del plan generado por AI
+  
+  // Status
+  status    String   @default("active") // active, completed, cancelled
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId, status])
+  @@index([userId, startDate])
+}
+
+// ============================================
+// AI GENERATION LOGS
+// ============================================
+
+model AIGenerationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Request info
+  requestType  String   // "training_plan", "nutrition_plan", "recipe"
+  promptTokens Int
+  
+  // Response info
+  responseData Json
+  completionTokens Int
+  
+  // Performance
+  durationMs Int
+  
+  // Status
+  success   Boolean
+  error     String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+// ============================================
+// ACTUALIZAR User MODEL
+// ============================================
+
+model User {
+  // ... campos existentes ...
+  
+  // AGREGAR ESTAS RELACIONES:
+  onboardingData OnboardingData?
+  generatedPlans GeneratedPlan[]
+  aiLogs         AIGenerationLog[]
+}
 // ============================================
 // USER PROFILE
 // ============================================
