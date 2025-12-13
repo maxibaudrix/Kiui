@@ -3,11 +3,29 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Salad, AlertCircle, Coffee, Clock, Apple, ChefHat, Flame, Info, CheckCircle2, X } from 'lucide-react';
 
+// 1. DEFINE THE EXPLICIT TYPE FOR THE FORM DATA
+interface NutritionFormData {
+  dietType: string;
+  mealsPerDay: string | number; 
+  allergies: string[];
+  intolerances: string[];
+  excludedFoods: string[];
+  customExcludedFood: string;
+  cookingFrequency: string;
+  mealComplexity: string;
+  alcoholConsumption: string;
+  waterIntake: string;
+  breakfastTime: string;
+  lunchTime: string;
+  dinnerTime: string;
+}
+
 export default function Step5NutritionPage() {
-  const [formData, setFormData] = useState({
+  // 2. APPLY THE TYPE TO useState
+  const [formData, setFormData] = useState<NutritionFormData>({
     // Tipo de dieta
     dietType: '',
-    mealsPerDay: '',
+    mealsPerDay: '', // Will be updated to a number on selection
     
     // Alergias e intolerancias
     allergies: [],
@@ -31,18 +49,22 @@ export default function Step5NutritionPage() {
     dinnerTime: ''
   });
 
-  const [errors, setErrors] = useState({});
+  // Errors should be typed similarly for better type safety, but we'll focus on formData for the reported errors
+  const [errors, setErrors] = useState<Partial<NutritionFormData>>({});
 
-  const handleChange = (field, value) => {
+  // Use keyof NutritionFormData for type safety in dynamic field updates
+  const handleChange = (field: keyof NutritionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+      setErrors(prev => ({ ...prev, [field]: undefined })); // Use undefined or a better error object structure
     }
   };
 
-  const toggleArrayValue = (field, value) => {
+  // Explicitly type the field parameter for array toggling
+  const toggleArrayValue = (field: 'allergies' | 'intolerances' | 'excludedFoods', value: string) => {
     setFormData(prev => {
-      const currentArray = prev[field];
+      // Add explicit type assertion for clarity on array manipulation
+      const currentArray = prev[field] as string[];
       const newArray = currentArray.includes(value)
         ? currentArray.filter(v => v !== value)
         : [...currentArray, value];
@@ -60,7 +82,7 @@ export default function Step5NutritionPage() {
     }
   };
 
-  const removeExcludedFood = (food) => {
+  const removeExcludedFood = (food: string) => {
     setFormData(prev => ({
       ...prev,
       excludedFoods: prev.excludedFoods.filter(f => f !== food)
@@ -68,7 +90,7 @@ export default function Step5NutritionPage() {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: Partial<NutritionFormData> = {};
     
     if (!formData.dietType) {
       newErrors.dietType = 'Selecciona tu tipo de dieta';
@@ -231,7 +253,7 @@ export default function Step5NutritionPage() {
             
             {/* Diet Type */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              <label className="mb-4  text-slate-300 font-medium flex items-center gap-2">
                 <Salad className="w-5 h-5 text-emerald-400" />
                 ¿Qué tipo de dieta sigues?
               </label>
@@ -274,7 +296,7 @@ export default function Step5NutritionPage() {
 
             {/* Meals per Day */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              <label className="mb-4  text-slate-300 font-medium flex items-center gap-2">
                 <Coffee className="w-5 h-5 text-orange-400" />
                 ¿Cuántas comidas haces al día?
               </label>
@@ -317,7 +339,7 @@ export default function Step5NutritionPage() {
 
             {/* Allergies */}
             <div className="bg-gradient-to-br from-red-900/20 to-slate-900/50 border border-red-500/30 rounded-xl p-6">
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-400" />
                 ¿Tienes alergias alimentarias?
               </label>
@@ -399,7 +421,7 @@ export default function Step5NutritionPage() {
 
             {/* Excluded Foods */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <X className="w-5 h-5 text-purple-400" />
                 Alimentos que NO quieres ver en tu plan
                 <span className="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Opcional</span>
@@ -481,7 +503,7 @@ export default function Step5NutritionPage() {
 
             {/* Cooking Frequency */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <ChefHat className="w-5 h-5 text-blue-400" />
                 ¿Con qué frecuencia cocinas?
               </label>
