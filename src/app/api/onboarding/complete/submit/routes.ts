@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { transformOnboardingData } from '@/lib/onboarding/transformer';
