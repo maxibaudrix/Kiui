@@ -92,7 +92,7 @@ model OnboardingData {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // JSON completo del onboarding
-  data      Json     // Almacena OnboardingOutputComplete
+  data      String     // CAMBIADO: Antes era Json. Almacena OnboardingOutputComplete como String
   
   // Status
   status    String   @default("completed") // draft, completed, archived
@@ -120,7 +120,7 @@ model GeneratedPlan {
   endDate   DateTime
   
   // Plan data (JSON)
-  planData  Json     // Estructura del plan generado por AI
+  planData  String
   
   // Status
   status    String   @default("active") // active, completed, cancelled
@@ -147,7 +147,7 @@ model AIGenerationLog {
   promptTokens Int
   
   // Response info
-  responseData Json
+  responseData String
   completionTokens Int
   
   // Performance
