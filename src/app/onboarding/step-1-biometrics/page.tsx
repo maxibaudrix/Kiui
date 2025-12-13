@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, User, Ruler, Scale, Activity, Info, CheckCircle2 } from 'lucide-react';
 

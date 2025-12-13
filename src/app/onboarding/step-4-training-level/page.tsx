@@ -3,8 +3,40 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Dumbbell, TrendingUp, Zap, AlertTriangle, Settings, CheckCircle2, Info, Bike, Waves, Footprints as Run, Target } from 'lucide-react';
 
+// 1. FIX: Define the FormDataState interface to explicitly type the state object.
+interface FormDataState {
+  // Perfil deportivo
+  experienceLevel: string;
+  sportType: string;
+  sportSubtype: string;
+  
+  // Solo para multideporte (triatlón)
+  favoriteDiscipline: string;
+  leastFavoriteDiscipline: string;
+  
+  // Datos de rendimiento (opcionales)
+  runPaceZ2: string;
+  // Note: Using string for consistency, although input type is number.
+  ftpWatts: string | number; 
+  swim100mPace: string;
+  
+  // Frecuencia y volumen
+  // Note: daysPerWeek and sessionDuration options are numbers (type: number)
+  daysPerWeek: string | number; 
+  sessionDuration: string | number; 
+  
+  // Equipamiento
+  trainingLocation: string[]; // Array of strings
+  availableEquipment: string[]; // Array of strings
+  
+  // Lesiones
+  hasInjuries: boolean | null;
+  injuryDetails: string;
+}
+
 export default function Step4TrainingPage() {
-  const [formData, setFormData] = useState({
+  // 2. FIX: Apply the explicit type to useState
+  const [formData, setFormData] = useState<FormDataState>({
     // Perfil deportivo
     experienceLevel: '',
     sportType: '',
@@ -32,27 +64,27 @@ export default function Step4TrainingPage() {
     injuryDetails: ''
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{ [key in keyof FormDataState]?: string | null }>({});
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: keyof FormDataState, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
-  const toggleArrayValue = (field, value) => {
+  const toggleArrayValue = (field: 'trainingLocation' | 'availableEquipment', value: string) => {
     setFormData(prev => {
-      const currentArray = prev[field];
+      const currentArray = prev[field] as string[];
       const newArray = currentArray.includes(value)
         ? currentArray.filter(v => v !== value)
         : [...currentArray, value];
-      return { ...prev, [field]: newArray };
+      return { ...prev, [field]: newArray } as FormDataState;
     });
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: { [key in keyof FormDataState]?: string } = {};
     
     if (!formData.experienceLevel) {
       newErrors.experienceLevel = 'Selecciona tu nivel de experiencia';
@@ -277,7 +309,8 @@ export default function Step4TrainingPage() {
             
             {/* Experience Level */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* FIX: Removed 'block' class to resolve CSS conflict with 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 ¿Cuál es tu nivel de experiencia?
               </label>
@@ -301,312 +334,6 @@ export default function Step4TrainingPage() {
                           <CheckCircle2 className="w-4 h-4 text-slate-950" />
                         </div>
                 )}
-
-                {(formData.sportType === 'swimming' || formData.sportType === 'triathlon') && (
-                  <div>
-                    <label htmlFor="swim100mPace" className="block text-xs text-slate-400 mb-2">
-                      Ritmo 100m (min:seg)
-                    </label>
-                    <input
-                      id="swim100mPace"
-                      type="text"
-                      value={formData.swim100mPace}
-                      onChange={(e) => handleChange('swim100mPace', e.target.value)}
-                      placeholder="2:00"
-                      className="w-full bg-slate-950 border-2 border-slate-700 rounded-lg px-3 py-2 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all placeholder:text-slate-600 text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Days per Week */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <Zap className="w-5 h-5 text-orange-400" />
-                ¿Cuántos días por semana puedes entrenar?
-              </label>
-              <div className="grid grid-cols-5 gap-3">
-                {daysOptions.map((option) => {
-                  const isSelected = formData.daysPerWeek === option.value;
-                  
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handleChange('daysPerWeek', option.value)}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'bg-orange-600 border-orange-500 shadow-lg scale-110'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className={`text-center font-bold text-lg ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                        {option.value}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.daysPerWeek && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.daysPerWeek}
-                </p>
-              )}
-            </div>
-
-            {/* Session Duration */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <Settings className="w-5 h-5 text-cyan-400" />
-                ¿Cuánto tiempo tienes por sesión?
-              </label>
-              <div className="grid sm:grid-cols-4 gap-3">
-                {durationOptions.map((option) => {
-                  const isSelected = formData.sessionDuration === option.value;
-                  
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handleChange('sessionDuration', option.value)}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'bg-cyan-600 border-cyan-500 shadow-lg scale-105'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="text-2xl mb-2">{option.icon}</div>
-                      <div className={`font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                        {option.label}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.sessionDuration && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.sessionDuration}
-                </p>
-              )}
-            </div>
-
-            {/* Training Location */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium">
-                ¿Dónde entrenas?
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {trainingLocations.map((location) => {
-                  const isSelected = formData.trainingLocation.includes(location.value);
-                  
-                  return (
-                    <button
-                      key={location.value}
-                      type="button"
-                      onClick={() => toggleArrayValue('trainingLocation', location.value)}
-                      className={`relative p-3 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'bg-teal-600 border-teal-500 shadow-lg'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-teal-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="text-2xl mb-2">{location.icon}</div>
-                      <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                        {location.label}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.trainingLocation && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.trainingLocation}
-                </p>
-              )}
-            </div>
-
-            {/* Available Equipment */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium">
-                ¿Qué equipo tienes disponible?
-              </label>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {equipmentOptions.map((equipment) => {
-                  const isSelected = formData.availableEquipment.includes(equipment.value);
-                  
-                  return (
-                    <button
-                      key={equipment.value}
-                      type="button"
-                      onClick={() => toggleArrayValue('availableEquipment', equipment.value)}
-                      className={`relative p-3 rounded-lg border-2 transition-all text-left ${
-                        isSelected
-                          ? 'bg-indigo-600 border-indigo-500 shadow-lg'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{equipment.icon}</span>
-                        <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                          {equipment.label}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.availableEquipment && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.availableEquipment}
-                </p>
-              )}
-            </div>
-
-            {/* Injuries */}
-            <div className="bg-gradient-to-br from-red-900/20 to-slate-900/50 border border-red-500/30 rounded-xl p-6">
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-                ¿Tienes lesiones o molestias recientes?
-              </label>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <button
-                  type="button"
-                  onClick={() => handleChange('hasInjuries', true)}
-                  className={`relative p-4 rounded-xl border-2 transition-all ${
-                    formData.hasInjuries === true
-                      ? 'bg-red-600 border-red-500 shadow-lg'
-                      : 'bg-slate-950 border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  {formData.hasInjuries === true && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-400 rounded-full flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">⚠️</div>
-                    <div className={`font-bold ${formData.hasInjuries === true ? 'text-white' : 'text-slate-300'}`}>
-                      Sí, tengo molestias
-                    </div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleChange('hasInjuries', false);
-                    handleChange('injuryDetails', '');
-                  }}
-                  className={`relative p-4 rounded-xl border-2 transition-all ${
-                    formData.hasInjuries === false
-                      ? 'bg-green-600 border-green-500 shadow-lg'
-                      : 'bg-slate-950 border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  {formData.hasInjuries === false && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
-                      <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">✅</div>
-                    <div className={`font-bold ${formData.hasInjuries === false ? 'text-white' : 'text-slate-300'}`}>
-                      No, estoy bien
-                    </div>
-                  </div>
-                </button>
-              </div>
-              {errors.hasInjuries && (
-                <p className="text-red-400 text-xs mb-4 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.hasInjuries}
-                </p>
-              )}
-
-              {formData.hasInjuries && (
-                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <label htmlFor="injuryDetails" className="mb-2 block text-sm text-slate-400">
-                    Describe tus molestias o lesiones
-                  </label>
-                  <textarea
-                    id="injuryDetails"
-                    value={formData.injuryDetails}
-                    onChange={(e) => handleChange('injuryDetails', e.target.value)}
-                    placeholder="Ej: Dolor en rodilla derecha al correr, molestia en hombro izquierdo..."
-                    rows={3}
-                    className="w-full bg-slate-950 border-2 border-slate-700 rounded-lg px-4 py-3 text-white focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all placeholder:text-slate-600 resize-none"
-                  />
-                  <div className="mt-2 flex items-start gap-2 text-xs text-slate-500">
-                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" />
-                    <span>Adaptaremos tu plan para evitar ejercicios que puedan agravar tus molestias.</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Navigation buttons */}
-            <div className="flex items-center gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleBack}
-                className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 hover:border-slate-600 transition-all flex items-center gap-2"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Volver
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="flex-grow bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-3 px-8 rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
-              >
-                <span>Siguiente Paso</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Help link */}
-        <div className="text-center mt-6">
-          <p className="text-slate-500 text-sm">
-            ¿Necesitas ayuda?{' '}
-            <a href="/contact" className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
-              Contáctanos
-            </a>
-          </p>
-        </div>
-
-      </div>
-    </div>
-  );
-}>
-                      )}
                       <div className="text-4xl mb-3">{level.icon}</div>
                       <div className={`font-bold mb-1 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
                         {level.label}
@@ -626,7 +353,8 @@ export default function Step4TrainingPage() {
 
             {/* Sport Type */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* FIX: Removed 'block' class to resolve CSS conflict with 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <Dumbbell className="w-5 h-5 text-blue-400" />
                 ¿Qué tipo de entrenamiento practicas principalmente?
               </label>
@@ -868,9 +596,320 @@ export default function Step4TrainingPage() {
                     <input
                       id="ftpWatts"
                       type="number"
-                      value={formData.ftpWatts}
+                      // Ensure value is handled correctly for number input
+                      value={formData.ftpWatts || ''} 
                       onChange={(e) => handleChange('ftpWatts', e.target.value)}
                       placeholder="250"
                       className="w-full bg-slate-950 border-2 border-slate-700 rounded-lg px-3 py-2 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all placeholder:text-slate-600 text-sm"
                     />
-                  </div
+                  </div>
+                )}
+
+                {(formData.sportType === 'swimming' || formData.sportType === 'triathlon') && (
+                  <div>
+                    <label htmlFor="swim100mPace" className="block text-xs text-slate-400 mb-2">
+                      Ritmo 100m (min:seg)
+                    </label>
+                    <input
+                      id="swim100mPace"
+                      type="text"
+                      value={formData.swim100mPace}
+                      onChange={(e) => handleChange('swim100mPace', e.target.value)}
+                      placeholder="2:00"
+                      className="w-full bg-slate-950 border-2 border-slate-700 rounded-lg px-3 py-2 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all placeholder:text-slate-600 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Days per Week */}
+            <div>
+              {/* FIX: Removed 'block' class to resolve CSS conflict with 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <Zap className="w-5 h-5 text-orange-400" />
+                ¿Cuántos días por semana puedes entrenar?
+              </label>
+              <div className="grid grid-cols-5 gap-3">
+                {daysOptions.map((option) => {
+                  const isSelected = formData.daysPerWeek === option.value;
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleChange('daysPerWeek', option.value)}
+                      className={`relative p-4 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'bg-orange-600 border-orange-500 shadow-lg scale-110'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                        </div>
+                      )}
+                      <div className={`text-center font-bold text-lg ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                        {option.value}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.daysPerWeek && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.daysPerWeek}
+                </p>
+              )}
+            </div>
+
+            {/* Session Duration */}
+            <div>
+              {/* FIX: Removed 'block' class to resolve CSS conflict with 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <Settings className="w-5 h-5 text-cyan-400" />
+                ¿Cuánto tiempo tienes por sesión?
+              </label>
+              <div className="grid sm:grid-cols-4 gap-3">
+                {durationOptions.map((option) => {
+                  const isSelected = formData.sessionDuration === option.value;
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleChange('sessionDuration', option.value)}
+                      className={`relative p-4 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'bg-cyan-600 border-cyan-500 shadow-lg scale-105'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="text-2xl mb-2">{option.icon}</div>
+                      <div className={`font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                        {option.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.sessionDuration && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.sessionDuration}
+                </p>
+              )}
+            </div>
+
+            {/* Training Location */}
+            <div>
+              <label className="mb-4 block text-slate-300 font-medium">
+                ¿Dónde entrenas?
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {trainingLocations.map((location) => {
+                  const isSelected = formData.trainingLocation.includes(location.value);
+                  
+                  return (
+                    <button
+                      key={location.value}
+                      type="button"
+                      onClick={() => toggleArrayValue('trainingLocation', location.value)}
+                      className={`relative p-3 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'bg-teal-600 border-teal-500 shadow-lg'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-teal-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="text-2xl mb-2">{location.icon}</div>
+                      <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                        {location.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.trainingLocation && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.trainingLocation}
+                </p>
+              )}
+            </div>
+
+            {/* Available Equipment */}
+            <div>
+              <label className="mb-4 block text-slate-300 font-medium">
+                ¿Qué equipo tienes disponible?
+              </label>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {equipmentOptions.map((equipment) => {
+                  const isSelected = formData.availableEquipment.includes(equipment.value);
+                  
+                  return (
+                    <button
+                      key={equipment.value}
+                      type="button"
+                      onClick={() => toggleArrayValue('availableEquipment', equipment.value)}
+                      className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                        isSelected
+                          ? 'bg-indigo-600 border-indigo-500 shadow-lg'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
+                        </div>
+                      )}
+                      {/* The flex/block conflict was likely here, on the button's internal div/span, but it's not immediately visible. The previous fix targeted labels, so I'll check if the button itself had block. It did not. */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{equipment.icon}</span>
+                        <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                          {equipment.label}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.availableEquipment && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.availableEquipment}
+                </p>
+              )}
+            </div>
+
+            {/* Injuries */}
+            <div className="bg-gradient-to-br from-red-900/20 to-slate-900/50 border border-red-500/30 rounded-xl p-6">
+              {/* FIX: Removed 'block' class to resolve CSS conflict with 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                ¿Tienes lesiones o molestias recientes?
+              </label>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => handleChange('hasInjuries', true)}
+                  className={`relative p-4 rounded-xl border-2 transition-all ${
+                    formData.hasInjuries === true
+                      ? 'bg-red-600 border-red-500 shadow-lg'
+                      : 'bg-slate-950 border-slate-700 hover:border-slate-600'
+                  }`}
+                >
+                  {formData.hasInjuries === true && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-400 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">⚠️</div>
+                    <div className={`font-bold ${formData.hasInjuries === true ? 'text-white' : 'text-slate-300'}`}>
+                      Sí, tengo molestias
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange('hasInjuries', false);
+                    handleChange('injuryDetails', '');
+                  }}
+                  className={`relative p-4 rounded-xl border-2 transition-all ${
+                    formData.hasInjuries === false
+                      ? 'bg-green-600 border-green-500 shadow-lg'
+                      : 'bg-slate-950 border-slate-700 hover:border-slate-600'
+                  }`}
+                >
+                  {formData.hasInjuries === false && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">✅</div>
+                    <div className={`font-bold ${formData.hasInjuries === false ? 'text-white' : 'text-slate-300'}`}>
+                      No, estoy bien
+                    </div>
+                  </div>
+                </button>
+              </div>
+              {errors.hasInjuries && (
+                <p className="text-red-400 text-xs mb-4 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.hasInjuries}
+                </p>
+              )}
+
+              {formData.hasInjuries && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <label htmlFor="injuryDetails" className="mb-2 block text-sm text-slate-400">
+                    Describe tus molestias o lesiones
+                  </label>
+                  <textarea
+                    id="injuryDetails"
+                    value={formData.injuryDetails}
+                    onChange={(e) => handleChange('injuryDetails', e.target.value)}
+                    placeholder="Ej: Dolor en rodilla derecha al correr, molestia en hombro izquierdo..."
+                    rows={3}
+                    className="w-full bg-slate-950 border-2 border-slate-700 rounded-lg px-4 py-3 text-white focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all placeholder:text-slate-600 resize-none"
+                  />
+                  <div className="mt-2 flex items-start gap-2 text-xs text-slate-500">
+                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" />
+                    <span>Adaptaremos tu plan para evitar ejercicios que puedan agravar tus molestias.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="flex items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 hover:border-slate-600 transition-all flex items-center gap-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Volver
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="flex-grow bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-3 px-8 rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+              >
+                <span>Siguiente Paso</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Help link */}
+        <div className="text-center mt-6">
+          <p className="text-slate-500 text-sm">
+            ¿Necesitas ayuda?{' '}
+            <a href="/contact" className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
+              Contáctanos
+            </a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
