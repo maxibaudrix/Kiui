@@ -1,6 +1,7 @@
 // src/app/api/onboarding/calculate/route.ts
 
 import { NextResponse } from 'next/server';
+import { ZodError } from 'zod';
 // 1. Importar las funciones de cálculo (asumiendo que se crearán en /lib/calculations)
 import { calculateBMR } from '@/lib/calculations/bmr';
 import { calculateTDEE } from '@/lib/calculations/tdee';
@@ -8,7 +9,7 @@ import { calculateMacros } from '@/lib/calculations/macros';
 import { calculatePhases } from '@/lib/calculations/phases';
 // 2. Importar el validador (asumiendo que se creará en /lib/onboarding/validator)
 import { OnboardingCalculatorInputSchema } from '@/lib/onboarding/validator';
-import { ZodError } from 'zod';
+
 
 /**
  * Maneja la solicitud POST para calcular BMR, TDEE, Macros y Fases de entrenamiento
@@ -21,8 +22,6 @@ export async function POST(request: Request) {
     const rawData = await request.json();
 
     // 3. VALIDACIÓN: Asegura que los datos sean correctos antes de calcular
-    // El esquema de validación debe asegurar que los campos requeridos para el cálculo
-    // (ej. age, gender, weight, activityLevel, targetTimeline, daysPerWeek) estén presentes.
     const validatedData = OnboardingCalculatorInputSchema.parse(rawData);
 
     const { biometrics, objective, activity, training } = validatedData;
@@ -30,18 +29,27 @@ export async function POST(request: Request) {
     // 4. CÁLCULOS
     
     // BMR y TDEE
-    const bmr = calculateBMR(biometrics.weight, biometrics.height, biometrics.age, biometrics.gender);
+    // CORRECCIÓN: calculateBMR ahora recibe un objeto
+    const bmr = calculateBMR({
+        weight: biometrics.weight, 
+        height: biometrics.height, 
+        age: biometrics.age, 
+        gender: biometrics.gender
+    });
     const tdee = calculateTDEE(bmr, activity.dailyActivityLevel, training.daysPerWeek);
     
-    // Calorías Objetivo (Asumimos que el targetCalories es igual al TDEE para 'performance' o 'maintain', 
-    // y se ajusta para 'weightloss')
+    // Calorías Objetivo
     const targetCalories = objective.primaryGoal === 'weightloss' ? tdee - 500 : tdee;
+    
+    // Deducir el objetivo de peso semanal: -0.5kg/semana para pérdida de peso/déficit, 0 para mantenimiento/rendimiento.
+    const weeklyGoalKg = objective.primaryGoal === 'weightloss' ? -0.5 : 0; 
 
     // Distribución de Macros
-    const macros = calculateMacros(targetCalories, biometrics.weight);
+    // CORRECCIÓN: calculateMacros ahora recibe 3 argumentos
+    const macros = calculateMacros(targetCalories, biometrics.weight, weeklyGoalKg);
 
     // Fases del Plan de Entrenamiento
-    const phases = calculatePhases(objective.targetTimeline, objective.hasCompetition);
+    const phases = calculatePhases(objective.targetTimeline, objective.hasCompetition || false);
 
     // 5. RESPUESTA DE ÉXITO
     return NextResponse.json({
@@ -73,7 +81,3 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
-
-// Nota: No se requiere exportar la función GET, pero Next.js espera un handler de método.
-// Si se usa GET, se deben pasar los parámetros de cálculo en la URL (queryParams)
-// lo cual es menos recomendable para datos complejos, por eso se utiliza POST.

@@ -1,12 +1,11 @@
 // src/app/api/dashboard/route.ts
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import NextAuth from 'next-auth';
 import prisma  from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const session = await getServerSession(NextAuth)
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(
