@@ -3,34 +3,46 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, Activity, Footprints, Armchair, Coffee, Briefcase, Bike, Info, CheckCircle2, TrendingUp, Globe, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
+// 1. Definición de Interfaces
+interface ActivityData {
+  dailyActivityLevel: string;
+  dailySteps: string;
+  sittingHours: string;
+  workType: string;
+  activeCommute: boolean | null;
+  country: string;
+  timezone: string;
+  availableDays: string[];
+  preferredTimes: string[];
+}
+
+// 2. Tipo para errores
+type ActivityErrors = Partial<Record<keyof ActivityData, string | null>>;
+
 export default function Step3ActivityPage() {
-  const [formData, setFormData] = useState({
-    // Actividad diaria
+  // 3. Estado tipado
+  const [formData, setFormData] = useState<ActivityData>({
     dailyActivityLevel: '',
     dailySteps: '',
     sittingHours: '',
     workType: '',
     activeCommute: null,
-    
-    // NUEVO: Ubicación
     country: '',
     timezone: '',
-    
-    // NUEVO: Disponibilidad
     availableDays: [],
     preferredTimes: []
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ActivityErrors>({});
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: keyof ActivityData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
-  const toggleArrayValue = (field, value) => {
+  const toggleArrayValue = (field: 'availableDays' | 'preferredTimes', value: string) => {
     setFormData(prev => {
       const currentArray = prev[field];
       const newArray = currentArray.includes(value)
@@ -44,7 +56,7 @@ export default function Step3ActivityPage() {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: ActivityErrors = {};
     
     if (!formData.dailyActivityLevel) {
       newErrors.dailyActivityLevel = 'Selecciona tu nivel de actividad diaria';
@@ -151,7 +163,6 @@ export default function Step3ActivityPage() {
     { value: 'physical', label: 'Físico', description: 'Construcción, delivery, deporte', icon: '💪' },
   ];
 
-  // NUEVO: Países más comunes
   const countries = [
     { value: 'ES', label: 'España', flag: '🇪🇸', timezone: 'Europe/Madrid' },
     { value: 'MX', label: 'México', flag: '🇲🇽', timezone: 'America/Mexico_City' },
@@ -163,7 +174,6 @@ export default function Step3ActivityPage() {
     { value: 'OTHER', label: 'Otro', flag: '🌍', timezone: 'UTC' },
   ];
 
-  // NUEVO: Días de la semana
   const weekDays = [
     { value: 'monday', label: 'L', fullLabel: 'Lunes' },
     { value: 'tuesday', label: 'M', fullLabel: 'Martes' },
@@ -174,7 +184,6 @@ export default function Step3ActivityPage() {
     { value: 'sunday', label: 'D', fullLabel: 'Domingo' },
   ];
 
-  // NUEVO: Horarios preferidos
   const timeSlots = [
     { value: 'morning', label: 'Mañana', icon: '🌅', time: '6:00 - 12:00' },
     { value: 'midday', label: 'Mediodía', icon: '☀️', time: '12:00 - 14:00' },
@@ -182,7 +191,7 @@ export default function Step3ActivityPage() {
     { value: 'evening', label: 'Noche', icon: '🌙', time: '18:00 - 23:00' },
   ];
 
-  const handleCountryChange = (countryCode) => {
+  const handleCountryChange = (countryCode: string) => {
     const country = countries.find(c => c.value === countryCode);
     handleChange('country', countryCode);
     if (country) {
@@ -193,7 +202,6 @@ export default function Step3ActivityPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
       
-      {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -201,7 +209,6 @@ export default function Step3ActivityPage() {
 
       <div className="relative w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
         
-        {/* Logo */}
         <div className="absolute -top-16 left-0 flex items-center gap-2 opacity-80">
           <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
             <path d="M 8 8 L 8 14 M 8 8 L 14 8" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round"/>
@@ -217,7 +224,6 @@ export default function Step3ActivityPage() {
 
         <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-3xl overflow-hidden">
           
-          {/* Header */}
           <div className="border-b border-slate-800 p-8 pb-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -235,7 +241,6 @@ export default function Step3ActivityPage() {
               </div>
             </div>
             
-            {/* Progress bar */}
             <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-500"
@@ -250,9 +255,10 @@ export default function Step3ActivityPage() {
 
           <div className="p-8 space-y-8">
             
-            {/* NUEVO: País/Región */}
+            {/* Country/Region */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* Se eliminó 'block' para evitar conflicto con 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <Globe className="w-5 h-5 text-indigo-400" />
                 ¿En qué país vives?
               </label>
@@ -267,6 +273,292 @@ export default function Step3ActivityPage() {
                       onClick={() => handleCountryChange(country.value)}
                       className={`relative p-3 rounded-lg border-2 transition-all text-left ${
                         isSelected
+                          ? 'bg-indigo-600 border-indigo-500 shadow-lg scale-105'
+                          : 'bg-slate-950 border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="flex flex-col items-center gap-1 mb-1">
+                        <span className="text-2xl">{country.flag}</span>
+                        <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                          {country.label}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+               {errors.country && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.country}
+                </p>
+              )}
+            </div>
+
+            {/* Daily Activity Level */}
+            <div>
+              {/* Se eliminó 'block' para evitar conflicto con 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <Activity className="w-5 h-5 text-emerald-400" />
+                ¿Cómo describirías tu actividad diaria?
+              </label>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {activityLevels.map((level) => {
+                  const Icon = level.icon;
+                  const isSelected = formData.dailyActivityLevel === level.value;
+                  
+                  return (
+                    <button
+                      key={level.value}
+                      type="button"
+                      onClick={() => handleChange('dailyActivityLevel', level.value)}
+                      className={`relative p-5 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? `${level.bgColor} ${level.borderColor} shadow-lg scale-105`
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="flex items-start gap-3 mb-3">
+                        <Icon className={`w-7 h-7 ${isSelected ? level.color : 'text-slate-500'}`} />
+                        <div className="flex-grow">
+                          <div className={`font-bold mb-1 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                            {level.label}
+                          </div>
+                          <div className="text-xs text-slate-400">{level.description}</div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-slate-500 bg-slate-950/50 rounded-lg px-2 py-1.5 mt-2">
+                        {level.details}
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <span className="text-[10px] font-mono text-slate-500">{level.multiplier}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.dailyActivityLevel && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.dailyActivityLevel}
+                </p>
+              )}
+            </div>
+
+            {/* Daily Steps */}
+            <div>
+              {/* Se eliminó 'block' para evitar conflicto con 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <Footprints className="w-5 h-5 text-blue-400" />
+                ¿Cuántos pasos caminas al día aproximadamente?
+              </label>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {stepRanges.map((range) => {
+                  const isSelected = formData.dailySteps === range.value;
+                  
+                  return (
+                    <button
+                      key={range.value}
+                      type="button"
+                      onClick={() => handleChange('dailySteps', range.value)}
+                      className={`relative p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-500 shadow-lg shadow-blue-500/20 scale-105'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="text-2xl">{range.icon}</div>
+                      <div className="flex-grow text-left">
+                        <div className={`font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                          {range.label}
+                        </div>
+                        <div className="text-xs text-slate-400">{range.steps}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.dailySteps && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.dailySteps}
+                </p>
+              )}
+            </div>
+
+            {/* Días disponibles */}
+            <div>
+              {/* Se eliminó 'block' para evitar conflicto con 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-purple-400" />
+                ¿Qué días puedes entrenar?
+              </label>
+              <div className="flex justify-center gap-2">
+                {weekDays.map((day) => {
+                  const isSelected = formData.availableDays.includes(day.value);
+                  
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      onClick={() => toggleArrayValue('availableDays', day.value)}
+                      className={`relative w-12 h-12 rounded-xl border-2 transition-all font-bold ${
+                        isSelected
+                          ? 'bg-purple-600 border-purple-500 shadow-lg text-white scale-110'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 text-slate-400'
+                      }`}
+                      title={day.fullLabel}
+                    >
+                      {day.label}
+                      {isSelected && (
+                        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-purple-400 rounded-full flex items-center justify-center">
+                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.availableDays && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1 text-center">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.availableDays}
+                </p>
+              )}
+            </div>
+
+            {/* Horarios preferidos */}
+            <div>
+              {/* Se eliminó 'block' para evitar conflicto con 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
+                <Clock className="w-5 h-5 text-cyan-400" />
+                ¿En qué horarios prefieres entrenar?
+              </label>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {timeSlots.map((slot) => {
+                  const isSelected = formData.preferredTimes.includes(slot.value);
+                  
+                  return (
+                    <button
+                      key={slot.value}
+                      type="button"
+                      onClick={() => toggleArrayValue('preferredTimes', slot.value)}
+                      className={`relative p-4 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? 'bg-cyan-600 border-cyan-500 shadow-lg'
+                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">{slot.icon}</div>
+                        <div className="text-left flex-grow">
+                          <div className={`font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                            {slot.label}
+                          </div>
+                          <div className="text-xs text-slate-400">{slot.time}</div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.preferredTimes && (
+                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.preferredTimes}
+                </p>
+              )}
+            </div>
+
+            {/* Optional: Sitting Hours */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <Armchair className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-grow">
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-slate-300 font-medium">
+                      ¿Cuántas horas pasas sentado/a al día?
+                    </label>
+                    <span className="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full">Opcional</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mb-3">Incluye trabajo, transporte, tiempo frente a pantallas</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {sittingOptions.map((option) => {
+                  const isSelected = formData.sittingHours === option.value;
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleChange('sittingHours', option.value)}
+                      className={`relative p-3 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? 'bg-purple-600 border-purple-500 shadow-lg'
+                          : 'bg-slate-950 border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-purple-400 rounded-full flex items-center justify-center">
+                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
+                        </div>
+                      )}
+                      <div className="text-xl mb-1">{option.icon}</div>
+                      <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                        {option.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Optional: Work Type */}
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <Briefcase className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-grow">
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-slate-300 font-medium">
+                      ¿Qué tipo de trabajo realizas?
+                    </label>
+                    <span className="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full">Opcional</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid sm:grid-cols-2 gap-3">
+                {workTypes.map((work) => {
+                  const isSelected = formData.workType === work.value;
+                  
+                  return (
+                    <button
+                      key={work.value}
+                      type="button"
+                      onClick={() => handleChange('workType', work.value)}
+                      className={`relative p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
+                        isSelected
                           ? 'bg-yellow-600 border-yellow-500 shadow-lg'
                           : 'bg-slate-950 border-slate-700 hover:border-slate-600'
                       }`}
@@ -276,13 +568,13 @@ export default function Step3ActivityPage() {
                           <CheckCircle2 className="w-3 h-3 text-slate-950" />
                         </div>
                       )}
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{work.icon}</span>
-                        <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      <div className="text-2xl">{work.icon}</div>
+                      <div className="text-left">
+                        <div className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
                           {work.label}
-                        </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">{work.description}</div>
                       </div>
-                      <div className="text-xs text-slate-400">{work.description}</div>
                     </button>
                   );
                 })}
@@ -379,304 +671,4 @@ export default function Step3ActivityPage() {
       </div>
     </div>
   );
-} rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'bg-indigo-600 border-indigo-500 shadow-lg scale-105'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="text-center">
-                        <div className="text-2xl mb-1">{country.flag}</div>
-                        <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                          {country.label}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.country && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.country}
-                </p>
-              )}
-              <div className="mt-3 flex items-start gap-2 text-xs text-slate-500 bg-slate-900/50 border border-slate-800 rounded-lg p-3">
-                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-indigo-400" />
-                <span>Usaremos esto para sugerirte recetas con ingredientes disponibles en tu región.</span>
-              </div>
-            </div>
-
-            {/* Daily Activity Level */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <Activity className="w-5 h-5 text-emerald-400" />
-                ¿Cómo describirías tu actividad diaria?
-              </label>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {activityLevels.map((level) => {
-                  const Icon = level.icon;
-                  const isSelected = formData.dailyActivityLevel === level.value;
-                  
-                  return (
-                    <button
-                      key={level.value}
-                      type="button"
-                      onClick={() => handleChange('dailyActivityLevel', level.value)}
-                      className={`relative p-5 rounded-xl border-2 transition-all text-left ${
-                        isSelected
-                          ? `${level.bgColor} ${level.borderColor} shadow-lg scale-105`
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="flex items-start gap-3 mb-3">
-                        <Icon className={`w-7 h-7 ${isSelected ? level.color : 'text-slate-500'}`} />
-                        <div className="flex-grow">
-                          <div className={`font-bold mb-1 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                            {level.label}
-                          </div>
-                          <div className="text-xs text-slate-400">{level.description}</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-slate-500 bg-slate-950/50 rounded-lg px-2 py-1.5 mt-2">
-                        {level.details}
-                      </div>
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[10px] font-mono text-slate-500">{level.multiplier}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.dailyActivityLevel && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.dailyActivityLevel}
-                </p>
-              )}
-            </div>
-
-            {/* Daily Steps */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <Footprints className="w-5 h-5 text-blue-400" />
-                ¿Cuántos pasos caminas al día aproximadamente?
-              </label>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {stepRanges.map((range) => {
-                  const isSelected = formData.dailySteps === range.value;
-                  
-                  return (
-                    <button
-                      key={range.value}
-                      type="button"
-                      onClick={() => handleChange('dailySteps', range.value)}
-                      className={`relative p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                        isSelected
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-500 shadow-lg shadow-blue-500/20 scale-105'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="text-2xl">{range.icon}</div>
-                      <div className="flex-grow text-left">
-                        <div className={`font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                          {range.label}
-                        </div>
-                        <div className="text-xs text-slate-400">{range.steps}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.dailySteps && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.dailySteps}
-                </p>
-              )}
-              <div className="mt-3 flex items-start gap-2 text-xs text-slate-500 bg-slate-900/50 border border-slate-800 rounded-lg p-3">
-                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-400" />
-                <span>Si usas un smartwatch o teléfono, revisa tu promedio de los últimos 7 días. No incluyas tus entrenamientos aquí.</span>
-              </div>
-            </div>
-
-            {/* NUEVO: Días disponibles */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-purple-400" />
-                ¿Qué días puedes entrenar?
-              </label>
-              <div className="flex justify-center gap-2">
-                {weekDays.map((day) => {
-                  const isSelected = formData.availableDays.includes(day.value);
-                  
-                  return (
-                    <button
-                      key={day.value}
-                      type="button"
-                      onClick={() => toggleArrayValue('availableDays', day.value)}
-                      className={`relative w-12 h-12 rounded-xl border-2 transition-all font-bold ${
-                        isSelected
-                          ? 'bg-purple-600 border-purple-500 shadow-lg text-white scale-110'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 text-slate-400'
-                      }`}
-                      title={day.fullLabel}
-                    >
-                      {day.label}
-                      {isSelected && (
-                        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-purple-400 rounded-full flex items-center justify-center">
-                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.availableDays && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1 text-center">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.availableDays}
-                </p>
-              )}
-              <div className="mt-3 text-center text-sm text-slate-400">
-                {formData.availableDays.length > 0 ? (
-                  <span className="text-emerald-400 font-bold">{formData.availableDays.length} días seleccionados</span>
-                ) : (
-                  <span>Selecciona los días que puedes entrenar</span>
-                )}
-              </div>
-            </div>
-
-            {/* NUEVO: Horarios preferidos */}
-            <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
-                <Clock className="w-5 h-5 text-cyan-400" />
-                ¿En qué horarios prefieres entrenar?
-              </label>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {timeSlots.map((slot) => {
-                  const isSelected = formData.preferredTimes.includes(slot.value);
-                  
-                  return (
-                    <button
-                      key={slot.value}
-                      type="button"
-                      onClick={() => toggleArrayValue('preferredTimes', slot.value)}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'bg-cyan-600 border-cyan-500 shadow-lg'
-                          : 'bg-slate-900 border-slate-700 hover:border-slate-600 hover:bg-slate-800'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{slot.icon}</div>
-                        <div className="text-left flex-grow">
-                          <div className={`font-bold mb-0.5 ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                            {slot.label}
-                          </div>
-                          <div className="text-xs text-slate-400">{slot.time}</div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {errors.preferredTimes && (
-                <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
-                  <span className="inline-block w-1 h-1 bg-red-400 rounded-full"></span>
-                  {errors.preferredTimes}
-                </p>
-              )}
-              <div className="mt-3 flex items-start gap-2 text-xs text-slate-500 bg-slate-900/50 border border-slate-800 rounded-lg p-3">
-                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-cyan-400" />
-                <span>Puedes seleccionar múltiples horarios. Usaremos esto para sugerirte el mejor momento del día.</span>
-              </div>
-            </div>
-
-            {/* Optional: Sitting Hours */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
-              <div className="flex items-start gap-3 mb-4">
-                <Armchair className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-slate-300 font-medium">
-                      ¿Cuántas horas pasas sentado/a al día?
-                    </label>
-                    <span className="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full">Opcional</span>
-                  </div>
-                  <div className="text-xs text-slate-500 mb-3">Incluye trabajo, transporte, tiempo frente a pantallas</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {sittingOptions.map((option) => {
-                  const isSelected = formData.sittingHours === option.value;
-                  
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handleChange('sittingHours', option.value)}
-                      className={`relative p-3 rounded-lg border-2 transition-all ${
-                        isSelected
-                          ? 'bg-purple-600 border-purple-500 shadow-lg'
-                          : 'bg-slate-950 border-slate-700 hover:border-slate-600'
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-purple-400 rounded-full flex items-center justify-center">
-                          <CheckCircle2 className="w-3 h-3 text-slate-950" />
-                        </div>
-                      )}
-                      <div className="text-xl mb-1">{option.icon}</div>
-                      <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                        {option.label}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Optional: Work Type */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
-              <div className="flex items-start gap-3 mb-4">
-                <Briefcase className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-grow">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-slate-300 font-medium">
-                      ¿Qué tipo de trabajo realizas?
-                    </label>
-                    <span className="text-slate-500 text-xs bg-slate-800 px-2 py-0.5 rounded-full">Opcional</span>
-                  </div>
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {workTypes.map((work) => {
-                  const isSelected = formData.workType === work.value;
-                  
-                  return (
-                    <button
-                      key={work.value}
-                      type="button"
-                      onClick={() => handleChange('workType', work.value)}
-                      className={`relative p-3
+}
