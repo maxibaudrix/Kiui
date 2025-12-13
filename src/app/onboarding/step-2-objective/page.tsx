@@ -3,8 +3,37 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, ArrowLeft, Target, TrendingDown, TrendingUp, Activity, Flame, Trophy, Calendar, Zap, Info, CheckCircle2, Award, AlertCircle } from 'lucide-react';
 
+// 1. Definición de Interfaces para el Estado del Formulario
+interface ObjectiveData {
+  primaryGoal: 'cut' | 'bulk' | 'maintain' | 'recomp' | 'performance' | '';
+  goalSpeed: 'slow' | 'moderate' | 'aggressive' | '';
+  targetTimeline: number | ''; 
+  hasCompetition: boolean | null;
+  competitionType: 'race' | 'triathlon' | 'cycling' | 'powerlifting' | 'bodybuilding' | 'crossfit' | 'other' | '';
+  targetDate: string;
+  motivation: string;
+}
+
+// 2. Definición de Tipos para los Errores (mensajes de texto)
+type ObjectiveErrors = Partial<Record<keyof ObjectiveData, string | null>>;
+
+// NUEVAS INTERFACES para el resultado de la planificación (useMemo)
+interface PlanningPhases {
+  base: number;
+  build: number;
+  peak: number;
+  taper: number;
+  recovery: number;
+}
+
+interface PlanningCalculationResult {
+  blockSize: number;
+  totalBlocks: number;
+  phases: PlanningPhases;
+}
+
 export default function Step2ObjectivePage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ObjectiveData>({
     primaryGoal: '',
     goalSpeed: '',
     targetTimeline: '',
@@ -14,22 +43,32 @@ export default function Step2ObjectivePage() {
     motivation: ''
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<ObjectiveErrors>({});
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: keyof ObjectiveData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
-  // Cálculo automático de blockSize y fases
-  const planningCalculation = useMemo(() => {
+  // Cálculo automático de blockSize y fases (Tipado explícito con PlanningCalculationResult | null)
+  const planningCalculation: PlanningCalculationResult | null = useMemo(() => {
     if (!formData.targetTimeline) return null;
 
-    const weeks = formData.targetTimeline;
+    const weeks = Number(formData.targetTimeline);
+    if (isNaN(weeks) || weeks <= 0) return null;
+
     let blockSize = 4;
-    let phases = {};
+    
+    // Inicializar 'phases' con la interfaz correcta y valores iniciales
+    let phases: PlanningPhases = {
+        base: 0,
+        build: 0,
+        peak: 0,
+        taper: 0,
+        recovery: 0,
+    };
 
     // Determinar blockSize según duración
     if (weeks <= 8) {
@@ -59,7 +98,7 @@ export default function Step2ObjectivePage() {
       };
     } else {
       // Sin competición: solo base/build con recovery periódico
-      const recoveryWeeks = Math.floor(weeks / 4); // 1 recovery cada 4 semanas
+      const recoveryWeeks = Math.floor(weeks / 4);
       const trainableWeeks = weeks - recoveryWeeks;
       
       phases = {
@@ -71,6 +110,7 @@ export default function Step2ObjectivePage() {
       };
     }
 
+    // Asegurar que el objeto retornado coincide con PlanningCalculationResult
     return {
       blockSize,
       totalBlocks: Math.ceil(weeks / blockSize),
@@ -79,7 +119,7 @@ export default function Step2ObjectivePage() {
   }, [formData.targetTimeline, formData.hasCompetition, formData.targetDate]);
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: ObjectiveErrors = {};
     
     if (!formData.primaryGoal) {
       newErrors.primaryGoal = 'Selecciona tu objetivo principal';
@@ -95,6 +135,8 @@ export default function Step2ObjectivePage() {
       newErrors.targetTimeline = 'Selecciona un plazo estimado';
     }
 
+    // Corrección del error 'Type 'string' is not assignable to type 'boolean'.'
+    // La propiedad hasCompetition es 'boolean | null', el error se produce si es 'null'.
     if (formData.hasCompetition === null) {
       newErrors.hasCompetition = 'Indica si tienes una competición';
     }
@@ -262,7 +304,8 @@ export default function Step2ObjectivePage() {
             
             {/* Primary Goal */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* Se remueve 'block' de la etiqueta que ya tiene 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <Target className="w-5 h-5 text-emerald-400" />
                 ¿Cuál es tu objetivo principal?
               </label>
@@ -307,7 +350,8 @@ export default function Step2ObjectivePage() {
             {/* Goal Speed (conditional) */}
             {(formData.primaryGoal === 'cut' || formData.primaryGoal === 'bulk') && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+                {/* Se remueve 'block' de la etiqueta que ya tiene 'flex' */}
+                <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                   <Zap className="w-5 h-5 text-yellow-400" />
                   ¿A qué velocidad?
                 </label>
@@ -360,7 +404,8 @@ export default function Step2ObjectivePage() {
 
             {/* Target Timeline */}
             <div>
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* Se remueve 'block' de la etiqueta que ya tiene 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-400" />
                 ¿En cuánto tiempo quieres lograrlo?
               </label>
@@ -402,7 +447,8 @@ export default function Step2ObjectivePage() {
 
             {/* Competition Question - NUEVO */}
             <div className="bg-gradient-to-br from-purple-900/20 to-slate-900/50 border border-purple-500/30 rounded-xl p-6">
-              <label className="mb-4 block text-slate-300 font-medium flex items-center gap-2">
+              {/* Se remueve 'block' de la etiqueta que ya tiene 'flex' */}
+              <label className="mb-4 text-slate-300 font-medium flex items-center gap-2">
                 <Award className="w-5 h-5 text-purple-400" />
                 ¿Tienes una competición o evento específico?
               </label>
@@ -520,7 +566,7 @@ export default function Step2ObjectivePage() {
               )}
             </div>
 
-            {/* Planning Preview - NUEVO */}
+            {/* Planning Preview */}
             {planningCalculation && (
               <div className="bg-gradient-to-br from-emerald-900/20 to-slate-900/50 border border-emerald-500/30 rounded-xl p-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <div className="flex items-start gap-3">
@@ -541,6 +587,7 @@ export default function Step2ObjectivePage() {
                       <div className="border-t border-slate-700 pt-2 mt-2">
                         <div className="text-xs text-slate-500 mb-2">Distribución de fases:</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
+                          {/* Ahora se accede a las propiedades de forma segura gracias al tipado de PlanningPhases */}
                           {planningCalculation.phases.base > 0 && (
                             <div className="bg-slate-800 rounded px-2 py-1">
                               <span className="text-slate-400">Base: </span>

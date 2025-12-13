@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
 import { ArrowRight, ArrowLeft, User, Ruler, Scale, Activity, Info, CheckCircle2 } from 'lucide-react';
 
+// Definición de la interfaz para el estado de los datos biométricos
+interface BiometricsData {
+  age: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER' | '';
+  height: string;
+  weight: string;
+  bodyFatPercentage: string;
+}
+
 export default function Step1BiometricsPage() {
-  const [formData, setFormData] = useState({
+  // Inicialización del estado usando la interfaz BiometricsData
+  const [formData, setFormData] = useState<BiometricsData>({
     age: '',
     gender: '',
     height: '',
@@ -10,35 +20,49 @@ export default function Step1BiometricsPage() {
     bodyFatPercentage: ''
   });
 
-  const [errors, setErrors] = useState({});
+  // Tipado de errores como un subconjunto opcional de BiometricsData
+  const [errors, setErrors] = useState<Partial<BiometricsData>>({});
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: keyof BiometricsData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+      // Elimina el error al cambiar el campo
+      setErrors(prev => ({ ...prev, [field]: undefined })); 
     }
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: Partial<BiometricsData> = {};
+
+    // 🛑 Conversión explícita de string a number para las comparaciones (Corrige error 2365)
+    const age = Number(formData.age);
+    const height = Number(formData.height);
+    const weight = Number(formData.weight);
+    // Usamos Number() solo si hay un valor, sino lo dejamos como nulo para el chequeo de opcional
+    const bodyFatPercentage = formData.bodyFatPercentage ? Number(formData.bodyFatPercentage) : null;
     
-    if (!formData.age || formData.age < 15 || formData.age > 100) {
+    // Validación de Edad
+    if (!formData.age || age < 15 || age > 100) {
       newErrors.age = 'Edad debe estar entre 15 y 100 años';
     }
     
+    // Validación de Género
     if (!formData.gender) {
       newErrors.gender = 'Selecciona tu género';
     }
     
-    if (!formData.height || formData.height < 120 || formData.height > 250) {
+    // Validación de Altura
+    if (!formData.height || height < 120 || height > 250) {
       newErrors.height = 'Altura debe estar entre 120 y 250 cm';
     }
     
-    if (!formData.weight || formData.weight < 30 || formData.weight > 300) {
+    // Validación de Peso
+    if (!formData.weight || weight < 30 || weight > 300) {
       newErrors.weight = 'Peso debe estar entre 30 y 300 kg';
     }
 
-    if (formData.bodyFatPercentage && (formData.bodyFatPercentage < 3 || formData.bodyFatPercentage > 60)) {
+    // Validación de Porcentaje de Grasa Corporal (opcional)
+    if (bodyFatPercentage !== null && (bodyFatPercentage < 3 || bodyFatPercentage > 60)) {
       newErrors.bodyFatPercentage = 'Porcentaje debe estar entre 3% y 60%';
     }
 
@@ -50,11 +74,13 @@ export default function Step1BiometricsPage() {
     if (validate()) {
       console.log('Form valid, navigating to step 2...', formData);
       alert('✅ Datos guardados. Pasando al Step 2...');
+      // Aquí iría la lógica de navegación (por ejemplo, router.push('/step-2'))
     }
   };
 
   const handleBack = () => {
     console.log('Back to welcome');
+    // Aquí iría la lógica para volver al paso anterior
   };
 
   const progress = (1 / 6) * 100;
@@ -147,7 +173,8 @@ export default function Step1BiometricsPage() {
                   <button
                     key={g.value}
                     type="button"
-                    onClick={() => handleChange('gender', g.value)}
+                    // Asegura que el tipo 'gender' coincida con la interfaz BiometricsData
+                    onClick={() => handleChange('gender', g.value as BiometricsData['gender'])} 
                     className={`relative p-4 text-center rounded-xl border-2 transition-all ${
                       formData.gender === g.value
                         ? 'bg-gradient-to-br from-emerald-600 to-teal-600 border-emerald-500 shadow-lg shadow-emerald-500/30 scale-105'
