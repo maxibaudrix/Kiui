@@ -1,13 +1,15 @@
 // src/lib/onboarding/transformer.ts
 
 import { OnboardingSubmitInput } from '@/lib/onboarding/validator';
-import type { OnboardingData, UserProfile, UserGoals } from '@prisma/client';
+// Importamos solo el namespace Prisma
+import type { Prisma } from '@prisma/client'; 
 
-// Define el tipo de salida para la función de transformación
+// Define el tipo de salida para la función de transformación usando el namespace Prisma
 interface TransformedData {
-    userProfileData: Omit<UserProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
-    userGoalsData: Omit<UserGoals, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'targetCalories' | 'targetProteinG' | 'targetCarbsG' | 'targetFatG' | 'bmr' | 'tdee'>;
-    onboardingDataRecord: Omit<OnboardingData, 'id' | 'createdAt' | 'updatedAt'>;
+    // Usamos Prisma.ModelNameGetPayload para obtener el tipo exacto del modelo
+    userProfileData: Omit<Prisma.UserProfileGetPayload<{}>, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
+    userGoalsData: Omit<Prisma.UserGoalsGetPayload<{}>, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'targetCalories' | 'targetProteinG' | 'targetCarbsG' | 'targetFatG' | 'bmr' | 'tdee'>;
+    onboardingDataRecord: Omit<Prisma.OnboardingDataGetPayload<{}>, 'id' | 'createdAt' | 'updatedAt'>;
 }
 
 /**

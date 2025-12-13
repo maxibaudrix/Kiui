@@ -88,3 +88,4 @@ export const OnboardingCalculatorInputSchema = z.object({
 });
 
 export type OnboardingCalculatorInput = z.infer<typeof OnboardingCalculatorInputSchema>;
+export type OnboardingSubmitInput = z.infer<typeof OnboardingSubmitSchema>;
