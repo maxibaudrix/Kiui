@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, TrendingUp, Dumbbell, Utensils, Activity, AlertCircle, Edit, Loader2 } from 'lucide-react';
 
 // 1. DEFINE TYPES FOR COMPLEX OBJECTS (Phases and Macros)
@@ -39,6 +40,7 @@ interface CalculationsResult {
 
 
 export default function Step6ReviewPage() {
+  const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Mock data - En producción vendría del store/context
@@ -97,14 +99,17 @@ export default function Step6ReviewPage() {
     };
   }, []);
 
-  const handleGeneratePlan = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      console.log('Plan generated');
-      alert('✅ ¡Plan generado! Redirigiendo al dashboard...');
-      setIsGenerating(false);
-    }, 3000);
-  };
+  const handleGeneratePlan = async () => {
+  setIsGenerating(true);
+
+  // Simulación de generación
+  await new Promise((res) => setTimeout(res, 3000));
+
+  console.log('Plan generated');
+
+  // TODO: aquí luego irá POST /api/onboarding/complete
+  router.push('/dashboard');
+};
 
   const progress = 100;
 
@@ -368,7 +373,7 @@ export default function Step6ReviewPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button onClick={() => console.log('Back')} disabled={isGenerating} className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+              <button onClick={() => router.push('/onboarding/step-5-diet')} disabled={isGenerating} className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                 <ArrowLeft className="w-5 h-5" />
                 Volver
               </button>
@@ -414,7 +419,10 @@ export default function Step6ReviewPage() {
         <div className="text-center mt-6">
           <p className="text-slate-500 text-sm">
             ¿Necesitas modificar algo?{' '}
-            <button className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium">
+            <button
+              onClick={() => router.push('/onboarding/step-1-biometrics')}
+              className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+            >
               Volver a editar
             </button>
           </p>

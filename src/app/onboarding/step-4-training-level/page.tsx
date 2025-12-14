@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Dumbbell, TrendingUp, Zap, AlertTriangle, Settings, CheckCircle2, Info, Bike, Waves, Footprints as Run, Target } from 'lucide-react';
 
 // 1. FIX: Define the FormDataState interface to explicitly type the state object.
@@ -65,6 +66,7 @@ export default function Step4TrainingPage() {
   });
 
   const [errors, setErrors] = useState<{ [key in keyof FormDataState]?: string | null }>({});
+  const router = useRouter();
 
   const handleChange = (field: keyof FormDataState, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -125,12 +127,12 @@ export default function Step4TrainingPage() {
   const handleSubmit = () => {
     if (validate()) {
       console.log('Form valid, navigating to step 5...', formData);
-      alert('✅ Perfil deportivo guardado. Pasando al Step 5...');
+      router.push('/onboarding/step-5-diet');
     }
   };
 
   const handleBack = () => {
-    console.log('Back to step 3');
+    router.push('/onboarding/step-3-activity');
   };
 
   const progress = (4 / 6) * 100;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Salad, AlertCircle, Coffee, Clock, Apple, ChefHat, Flame, Info, CheckCircle2, X } from 'lucide-react';
 
 // 1. DEFINE THE EXPLICIT TYPE FOR THE FORM DATA
@@ -51,6 +52,7 @@ export default function Step5NutritionPage() {
 
   // Errors should be typed similarly for better type safety, but we'll focus on formData for the reported errors
   const [errors, setErrors] = useState<Partial<NutritionFormData>>({});
+  const router = useRouter();
 
   // Use keyof NutritionFormData for type safety in dynamic field updates
   const handleChange = (field: keyof NutritionFormData, value: any) => {
@@ -111,12 +113,12 @@ export default function Step5NutritionPage() {
   const handleSubmit = () => {
     if (validate()) {
       console.log('Form valid, navigating to step 6...', formData);
-      alert('✅ Preferencias nutricionales guardadas. Pasando al Step 6...');
+      router.push('/onboarding/step-6-macros');
     }
   };
 
   const handleBack = () => {
-    console.log('Back to step 4');
+    router.push('/onboarding/step-4-training-level');
   };
 
   const progress = (5 / 6) * 100;
