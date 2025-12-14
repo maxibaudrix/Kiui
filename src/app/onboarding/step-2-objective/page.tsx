@@ -170,8 +170,9 @@ export default function Step2ObjectivePage() {
 
 
   const handleBack = () => {
-    console.log('Back to step 1');
-  };
+  router.push('/onboarding/step-1-biometrics');
+};
+
 
   const progress = (2 / 6) * 100;
 
