@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Target, TrendingDown, TrendingUp, Activity, Flame, Trophy, Calendar, Zap, Info, CheckCircle2, Award, AlertCircle } from 'lucide-react';
 
 // 1. Definición de Interfaces para el Estado del Formulario
@@ -44,6 +45,7 @@ export default function Step2ObjectivePage() {
   });
 
   const [errors, setErrors] = useState<ObjectiveErrors>({});
+  const router = useRouter();
 
   const handleChange = (field: keyof ObjectiveData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -154,15 +156,18 @@ export default function Step2ObjectivePage() {
   };
 
   const handleSubmit = () => {
-    if (validate()) {
-      const outputData = {
-        ...formData,
-        planning: planningCalculation
-      };
-      console.log('Form valid, navigating to step 3...', outputData);
-      alert('✅ Objetivo guardado. Pasando al Step 3...');
-    }
+  if (!validate()) return;
+
+  const outputData = {
+    ...formData,
+    planning: planningCalculation
   };
+
+  console.log('Form valid, navigating to step 3...', outputData);
+
+  router.push('/onboarding/step-3-activity');
+};
+
 
   const handleBack = () => {
     console.log('Back to step 1');
