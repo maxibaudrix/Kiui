@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Activity, Footprints, Armchair, Coffee, Briefcase, Bike, Info, CheckCircle2, TrendingUp, Globe, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
 // 1. Definición de Interfaces
@@ -34,6 +35,7 @@ export default function Step3ActivityPage() {
   });
 
   const [errors, setErrors] = useState<ActivityErrors>({});
+  const router = useRouter();
 
   const handleChange = (field: keyof ActivityData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -85,12 +87,12 @@ export default function Step3ActivityPage() {
   const handleSubmit = () => {
     if (validate()) {
       console.log('Form valid, navigating to step 4...', formData);
-      alert('✅ Actividad guardada. Pasando al Step 4...');
+      router.push('/onboarding/step-4-training-level');
     }
   };
 
   const handleBack = () => {
-    console.log('Back to step 2');
+    router.push('/onboarding/step-2-objective');
   };
 
   const progress = (3 / 6) * 100;
