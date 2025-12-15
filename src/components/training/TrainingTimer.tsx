@@ -152,19 +152,33 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
   }, [remainingMs, running, mode, settings, countdown321]);
 
   // Fullscreen
-  useEffect(() => {
-    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
-  }, []);
+    useEffect(() => {
+    const onFullscreenChange = () => {
+        setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+
+    return () => {
+        document.removeEventListener('fullscreenchange', onFullscreenChange);
+    };
+    }, []);
+
 
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      await containerRef.current?.requestFullscreen();
-    } else {
-      await document.exitFullscreen();
+    if (!containerRef.current) return;
+
+    try {
+        if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+        } else {
+        await document.exitFullscreen();
+        }
+    } catch (error) {
+        console.error('Fullscreen error:', error);
     }
-  };
+    };
+
 
   const reset = () => {
     if (elapsedMs > 0) {
@@ -277,29 +291,51 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
   }
 
   // Versión completa
-  return (
-    <div
-      ref={containerRef}
-      className={`min-h-screen bg-slate-950 text-white p-4 md:p-8 ${settings.highContrast ? 'contrast-125 saturate-150' : ''}`}
-    >
-      {/* ... resto del código del timer completo que ya te mostré ... */}
-      <p className="text-center text-slate-400">Timer completo (usa el código anterior completo aquí)</p>
-    </div>
-  );
-}
-
-// Switch component
-const Switch = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
-  <button
-    onClick={() => onChange(!checked)}
-    className={`w-12 h-6 rounded-full p-0.5 transition-all ${
-      checked ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-slate-700'
-    }`}
+return (
+  <div
+    ref={containerRef}
+    className={`min-h-screen flex flex-col items-center justify-center p-4 md:p-8
+      transition-colors
+      ${isFullscreen ? 'bg-slate-950 text-white' : 'bg-transparent'}
+      ${settings.highContrast ? 'contrast-125 saturate-150' : ''}`}
   >
-    <span
-      className={`block w-5 h-5 rounded-full bg-white transition-all ${
-        checked ? 'translate-x-6' : 'translate-x-0'
-      }`}
-    />
-  </button>
+    {/* Display del tiempo */}
+    <div className="text-6xl font-bold mb-4">
+      {mode === 'STOPWATCH' ? mmss(elapsedMs) : mmss(remainingMs)}
+    </div>
+
+    {/* Info de fase y round */}
+    {mode !== 'STOPWATCH' && (
+      <div className="text-center text-slate-400 mb-6">
+        {phase === 'work' ? 'Trabajo' : 'Descanso'} · Ronda {round}/{config.rounds}
+      </div>
+    )}
+
+    {/* Controles */}
+    <div className="flex gap-4">
+      <button
+        onClick={() => setRunning(r => !r)}
+        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold"
+      >
+        {running ? <Pause className="inline w-5 h-5 mr-2" /> : <Play className="inline w-5 h-5 mr-2" />}
+        {running ? 'Pausar' : 'Iniciar'}
+      </button>
+
+      <button
+        onClick={reset}
+        className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold"
+      >
+        Reset
+      </button>
+
+      <button
+        onClick={toggleFullscreen}
+        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold flex items-center gap-2"
+      >
+        {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+        Fullscreen
+      </button>
+    </div>
+  </div>
 );
+}
