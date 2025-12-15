@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from 'react';
 
 /**
@@ -7,7 +8,7 @@ import { useState, useEffect } from 'react';
  * @param initialValue El valor inicial si no hay nada almacenado.
  * @returns [value, setValue] similar al useState.
  */
-function useLocalStorage<T>(key: string, initialValue: T) {
+export function useLocalStorage<T>(key: string, initialValue: T) {
   // 1. Inicializar el estado de forma perezosa (lazy)
   const [value, setValue] = useState<T>(() => {
     // Solo intentar acceder a window/localStorage en el cliente
