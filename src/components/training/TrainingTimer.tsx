@@ -1,46 +1,29 @@
-// src/components/training/TrainingTimer.tsx
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  Play, Pause, RotateCcw, SkipForward, Timer as TimerIcon,
-  Maximize, Minimize, Volume2, VolumeX, Vibrate, Contrast, Trophy, History
+  Play, Pause, RotateCcw, SkipForward, Maximize, Minimize,
+  Settings as SettingsIcon, Volume2, VolumeX
 } from 'lucide-react';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAudioBeep } from '@/hooks/useAudioBeep';
 
+// --- Tipos y Constantes ---
 type Mode = 'STOPWATCH' | 'HIIT' | 'TABATA' | 'EMOM' | 'AMRAP';
 
-interface IntervalConfig {
-  workSec: number;
-  restSec: number;
-  rounds: number;
-}
-
-interface Preset {
-  id: string;
-  name: string;
-  mode: Mode;
-  config: IntervalConfig;
-  createdAt: number;
-}
+const PRESETS: Record<Mode, { work: number; rest: number; rounds: number }> = {
+  STOPWATCH: { work: 0, rest: 0, rounds: 1 },
+  TABATA: { work: 20, rest: 10, rounds: 8 },
+  HIIT: { work: 30, rest: 15, rounds: 10 },
+  EMOM: { work: 60, rest: 0, rounds: 10 },
+  AMRAP: { work: 600, rest: 0, rounds: 1 },
+};
 
 interface Settings {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   highContrast: boolean;
-  volume: number;
-  countdownEnabled: boolean;
-}
-
-interface SessionHistory {
-  id: string;
-  date: number;
-  mode: Mode;
-  totalTimeMs: number;
-  roundsCompleted: number;
-  config: IntervalConfig;
 }
 
 interface Props {
@@ -52,49 +35,78 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const lastTimestampRef = useRef<number>(0);
   const tickRef = useRef<number | null>(null);
+  
+  // Para evitar beeps repetidos en el mismo segundo
+  const lastBeepSecondRef = useRef<number | null>(null);
 
-  const [mode, setMode] = useState<Mode>('STOPWATCH');
+  const [mode, setMode] = useState<Mode>('TABATA');
+  const [config, setConfig] = useState(PRESETS['TABATA']);
+  
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState<'work' | 'rest'>('work');
   const [round, setRound] = useState(1);
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [remainingMs, setRemainingMs] = useState(0);
+  const [remainingMs, setRemainingMs] = useState(PRESETS['TABATA'].work * 1000);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  const { supported: wakeSupported, active: wakeActive, request, release } = useWakeLock();
-  const { countdown321, phaseChange } = useAudioBeep();
+  const { active: wakeActive, request, release } = useWakeLock();
+  
+  // Usamos el hook de audio mejorado
+  const { initAudio, beepLow, beepHigh, beepRest } = useAudioBeep();
 
   const [settings, setSettings] = useLocalStorage<Settings>('kiui.timer.settings', {
     soundEnabled: true,
     vibrationEnabled: true,
     highContrast: false,
-    volume: 0.25,
-    countdownEnabled: true,
   });
 
-  const [presets, setPresets] = useLocalStorage<Preset[]>('kiui.timer.presets', []);
-  const [history, setHistory] = useLocalStorage<SessionHistory[]>('kiui.timer.history', []);
+  // --- Fullscreen ---
+  useEffect(() => {
+    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
 
-  const config = useMemo<IntervalConfig>(() => {
-    switch (mode) {
-      case 'TABATA': return { workSec: 20, restSec: 10, rounds: 8 };
-      case 'HIIT': return { workSec: 30, restSec: 15, rounds: 10 };
-      case 'EMOM': return { workSec: 60, restSec: 0, rounds: 10 };
-      case 'AMRAP': return { workSec: 12 * 60, restSec: 0, rounds: 1 };
-      default: return { workSec: 0, restSec: 0, rounds: 0 };
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      await containerRef.current.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
     }
-  }, [mode]);
+  };
 
-  // Inicializar remaining según fase
-  useEffect(() => {
-    if (mode === 'STOPWATCH') return setRemainingMs(0);
-    const secs = phase === 'work' ? config.workSec : config.restSec;
-    setRemainingMs(secs * 1000);
-  }, [phase, mode, config]);
+  // --- Selección de Modo ---
+  const selectMode = (m: Mode) => {
+    if (running) return;
+    setMode(m);
+    setConfig(PRESETS[m]);
+    setRound(1);
+    setPhase('work');
+    setRemainingMs(PRESETS[m].work * 1000);
+    setElapsedMs(0);
+    lastBeepSecondRef.current = null;
+  };
 
-  // Loop principal
+  // --- Helpers de Notificación ---
+  const playPhaseStart = useCallback((newPhase: 'work' | 'rest') => {
+    if (!settings.soundEnabled) return;
+    if (newPhase === 'work') beepHigh();
+    else beepRest();
+  }, [settings.soundEnabled, beepHigh, beepRest]);
+
+  const playCountdown = useCallback(() => {
+    if (settings.soundEnabled) beepLow();
+  }, [settings.soundEnabled, beepLow]);
+
+  // --- Loop Principal ---
   useEffect(() => {
-    if (!running) return;
+    if (!running) {
+      if (tickRef.current) cancelAnimationFrame(tickRef.current);
+      return;
+    }
+
     request();
     lastTimestampRef.current = performance.now();
 
@@ -105,220 +117,246 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
       if (mode === 'STOPWATCH') {
         setElapsedMs(prev => prev + delta);
       } else {
-        setElapsedMs(prev => prev + delta);
         setRemainingMs(prev => {
-          const newRemaining = Math.max(prev - delta, 0);
-          if (newRemaining <= 0 && prev > 0) {
-            if (settings.soundEnabled) phaseChange(settings.volume);
-            if (settings.vibrationEnabled && 'vibrate' in navigator) navigator.vibrate([140]);
+          const next = prev - delta;
+          const secondsLeft = Math.ceil(next / 1000);
 
-            if (phase === 'work' && config.restSec > 0) {
-              setPhase('rest');
-              return config.restSec * 1000;
+          // Lógica de Countdown (3, 2, 1)
+          if (secondsLeft <= 3 && secondsLeft > 0 && secondsLeft !== lastBeepSecondRef.current) {
+            playCountdown();
+            lastBeepSecondRef.current = secondsLeft;
+          }
+
+          if (next <= 0) {
+            // CAMBIO DE FASE
+            lastBeepSecondRef.current = null; // Reset para el siguiente ciclo
+            
+            if (phase === 'work') {
+              // Work -> Rest (si hay descanso)
+              if (config.rest > 0 && mode !== 'AMRAP') {
+                 setPhase('rest');
+                 playPhaseStart('rest');
+                 return config.rest * 1000;
+              } else {
+                // Work -> Work (Siguiente ronda directa)
+                if (round < config.rounds || mode === 'AMRAP') {
+                  setRound(r => r + 1);
+                  playPhaseStart('work');
+                  return config.work * 1000;
+                } else {
+                  // FIN
+                  setRunning(false);
+                  setPhase('work');
+                  release();
+                  return 0;
+                }
+              }
             } else {
-              setPhase('work');
-              setRound(r => r + 1);
-              return config.workSec * 1000;
+              // Rest -> Work
+              if (round < config.rounds) {
+                setPhase('work');
+                setRound(r => r + 1);
+                playPhaseStart('work');
+                return config.work * 1000;
+              } else {
+                setRunning(false);
+                release();
+                return 0;
+              }
             }
           }
-          return newRemaining;
+          return next;
         });
       }
-
       tickRef.current = requestAnimationFrame(loop);
     };
 
     tickRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (tickRef.current) cancelAnimationFrame(tickRef.current);
-      if (wakeActive) release();
-    };
-  }, [running, mode, phase, config, settings, wakeActive, request, release, phaseChange]);
+    return () => { if (tickRef.current) cancelAnimationFrame(tickRef.current); };
+  }, [running, mode, phase, config, round, request, release, playCountdown, playPhaseStart]);
 
-  // Countdown 3-2-1
-  useEffect(() => {
-    if (!running || mode === 'STOPWATCH' || !settings.countdownEnabled || !settings.soundEnabled) return;
-    const s = Math.ceil(remainingMs / 1000);
-    if (s === 3 && Math.abs(remainingMs - 3000) < 100) countdown321(settings.volume);
-  }, [remainingMs, running, mode, settings, countdown321]);
 
-  // Fullscreen
-  useEffect(() => {
-    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
-
-  const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
-    try {
-      if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (error) {
-      console.error('Fullscreen error:', error);
-    }
+  // --- Handlers ---
+  const togglePlay = () => {
+    initAudio(); // Habilitar audio context en click
+    setRunning(r => !r);
   };
-
+  
   const reset = () => {
-    if (elapsedMs > 0) {
-      setHistory(prev => [
-        { id: crypto.randomUUID?.() ?? String(Date.now()), date: Date.now(), mode, totalTimeMs: elapsedMs, roundsCompleted: round, config },
-        ...prev
-      ].slice(0, 50));
-    }
     setRunning(false);
     setElapsedMs(0);
     setRound(1);
     setPhase('work');
-    setRemainingMs(mode === 'STOPWATCH' ? 0 : config.workSec * 1000);
+    setRemainingMs(mode === 'STOPWATCH' ? 0 : config.work * 1000);
+    lastBeepSecondRef.current = null;
     release();
   };
 
   const skip = () => {
     if (mode === 'STOPWATCH') return;
-    if (settings.soundEnabled) phaseChange(settings.volume);
-    if (settings.vibrationEnabled && 'vibrate' in navigator) navigator.vibrate([120]);
-    if (phase === 'work' && config.restSec > 0) {
+    lastBeepSecondRef.current = null;
+    
+    if (phase === 'work' && config.rest > 0) {
       setPhase('rest');
-      setRemainingMs(config.restSec * 1000);
+      playPhaseStart('rest');
+      setRemainingMs(config.rest * 1000);
     } else {
       setPhase('work');
       setRound(r => r + 1);
-      setRemainingMs(config.workSec * 1000);
+      playPhaseStart('work');
+      setRemainingMs(config.work * 1000);
     }
   };
 
-  const savePreset = () => {
-    const id = crypto.randomUUID?.() ?? String(Date.now());
-    const name = `${mode} ${config.workSec}s/${config.restSec}s × ${config.rounds}`;
-    setPresets(prev => [{ id, name, mode, config, createdAt: Date.now() }, ...prev].slice(0, 25));
+  const formatTime = (ms: number) => {
+    const totalSec = Math.ceil(Math.max(0, ms) / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const mmss = (ms: number) => {
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-    return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  };
+  // --- Render Variables ---
+  const radius = 45; 
+  const circumference = 2 * Math.PI * radius;
+  const currentTotal = phase === 'work' ? config.work * 1000 : config.rest * 1000;
+  
+  // LÓGICA DE PROGRESO: 0 (vacío) -> 1 (lleno)
+  const progress = mode === 'STOPWATCH' ? 0 : 1 - (remainingMs / currentTotal);
+  
+  // Para llenar el círculo, reducimos el offset desde 'circumference' hasta '0'
+  const strokeOffset = circumference * (1 - progress);
 
-  const progress = mode === 'STOPWATCH'
-    ? 0
-    : ((phase === 'work' ? config.workSec * 1000 : config.restSec * 1000) - remainingMs) /
-      (phase === 'work' ? config.workSec * 1000 : config.restSec * 1000);
+  // Colores dinámicos
+  const isWork = phase === 'work';
+  // Texto y Anillo: Verde (Emerald) para Work, Naranja (Orange) para Rest
+  const ringColor = isWork ? '#10b981' : '#f97316'; 
+  const textColor = isWork ? 'text-emerald-400' : 'text-orange-400';
+  const labelColor = isWork ? 'text-emerald-500/60' : 'text-orange-500/60';
 
-  const circumference = 2 * Math.PI * 110;
-  const strokeDashoffset = circumference * (1 - progress);
-
-  // Versión embebida
-  if (embedded) {
-    return (
-      <div className="bg-slate-900 rounded-2xl p-6 border border-slate-700">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2"><TimerIcon className="w-5 h-5 text-emerald-400" />Timer</div>
-          {onClose && <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>}
-        </div>
-        <div className="text-center mb-4">
-          <div className="text-4xl font-bold mb-2">{mode === 'STOPWATCH' ? mmss(elapsedMs) : mmss(remainingMs)}</div>
-          <div className="text-sm text-slate-400">{mode} · {phase === 'work' ? 'Trabajo' : 'Descanso'}</div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setRunning(r => !r)} className="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-semibold">{running ? 'Pausar' : 'Iniciar'}</button>
-          <button onClick={reset} className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Reset</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Versión completa / fullscreen
+  // FULL SCREEN
   return (
     <div
-  ref={containerRef}
-  className={`min-h-screen flex flex-col items-center justify-center p-4 md:p-8
-    transition-colors
-    ${isFullscreen ? 'bg-slate-950 text-white' : 'bg-transparent'}
-    ${settings.highContrast ? 'contrast-125 saturate-150' : ''}`}
->
-  {/* Timer Display */}
-  <div className="text-6xl font-bold mb-4">
-    {mode === 'STOPWATCH' ? mmss(elapsedMs) : mmss(remainingMs)}
-  </div>
-
-  {/* Phase & Round */}
-  {mode !== 'STOPWATCH' && (
-    <div className="text-center text-slate-400 mb-6">
-      {phase === 'work' ? 'Trabajo' : 'Descanso'} · Ronda {round}/{config.rounds}
-    </div>
-  )}
-
-  {/* Progress Ring */}
-  <svg className="w-32 h-32 mb-6">
-    <circle
-      className="stroke-slate-700"
-      strokeWidth={12}
-      fill="transparent"
-      r={110}
-      cx={120}
-      cy={120}
-    />
-    <circle
-      className="stroke-emerald-500"
-      strokeWidth={12}
-      strokeDasharray={circumference}
-      strokeDashoffset={strokeDashoffset}
-      fill="transparent"
-      r={110}
-      cx={120}
-      cy={120}
-    />
-  </svg>
-
-  {/* Controls */}
-  <div className="flex gap-4 mb-4">
-    <button
-      onClick={() => setRunning(r => !r)}
-      className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold flex items-center gap-2"
+      ref={containerRef}
+      className={`relative w-full flex p-4 flex-col bg-slate-950 text-white overflow-hidden transition-colors duration-500 ${settings.highContrast ? 'contrast-125' : ''}`}
     >
-      {running ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-      {running ? 'Pausar' : 'Iniciar'}
-    </button>
-
-    <button
-      onClick={reset}
-      className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold flex items-center gap-2"
-    >
-      <RotateCcw className="w-5 h-5" /> Reset
-    </button>
-
-    <button
-      onClick={toggleFullscreen}
-      className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold flex items-center gap-2"
-    >
-      {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />} Fullscreen
-    </button>
-  </div>
-
-  {/* Opciones, presets, historial */}
-  <div className="flex flex-col gap-4 w-full max-w-md">
-    <button
-      onClick={savePreset}
-      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-white flex items-center gap-2">
-      <Trophy className="w-5 h-5" /> Guardar Preset
-    </button>
-
-    {history.length > 0 && (
-      <div className="bg-slate-800 p-4 rounded-xl text-slate-200">
-        <h3 className="font-bold mb-2">Historial</h3>
-        {history.slice(0, 5).map(h => (
-          <div key={h.id} className="text-sm mb-1">
-            {new Date(h.date).toLocaleString()} - {h.mode} - {Math.floor(h.totalTimeMs / 1000)}s
+      {/* HEADER */}
+      {!isFullscreen && (
+        <div className="absolute top- left-0 right-0 p-4 flex justify-between items-center z-20 bg-gradient-to-b from-slate-950/80 to-transparent">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {(Object.keys(PRESETS) as Mode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => selectMode(m)}
+                disabled={running}
+                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap
+                  ${mode === m ? 'bg-slate-100 text-slate-900' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+              >
+                {m}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
+          <button onClick={() => setShowSettings(!showSettings)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 ml-2">
+            <SettingsIcon size={20} />
+          </button>
+        </div>
+      )}
 
+      {/* SETTINGS (Omitted for brevity, same as before) */}
+      {showSettings && !isFullscreen && (
+        <div className="absolute top-16 right-4 z-30 bg-slate-900 border border-slate-700 p-4 rounded-2xl w-64 shadow-xl">
+             <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-slate-400">Sonido</span>
+              <button onClick={() => setSettings(s => ({...s, soundEnabled: !s.soundEnabled}))}>
+                {settings.soundEnabled ? <Volume2 className="text-emerald-400" size={20}/> : <VolumeX className="text-slate-500" size={20}/>}
+              </button>
+            </div>
+             {/* Inputs manuales */}
+             {mode !== 'STOPWATCH' && (
+              <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase">Work</label>
+                    <input type="number" className="w-full bg-slate-800 text-center rounded py-1 text-sm" 
+                           value={config.work} onChange={e => {
+                             const v = +e.target.value; 
+                             setConfig(c => ({...c, work: v}));
+                             if(!running && phase==='work') setRemainingMs(v*1000);
+                           }} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase">Rest</label>
+                    <input type="number" className="w-full bg-slate-800 text-center rounded py-1 text-sm" 
+                           value={config.rest} onChange={e => {
+                             const v = +e.target.value;
+                             setConfig(c => ({...c, rest: v}));
+                             if(!running && phase==='rest') setRemainingMs(v*1000);
+                           }} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase">Rounds</label>
+                    <input type="number" className="w-full bg-slate-800 text-center rounded py-1 text-sm" 
+                           value={config.rounds} onChange={e => setConfig(c => ({...c, rounds: +e.target.value}))} />
+                  </div>
+              </div>
+             )}
+        </div>
+      )}
+
+      {/* TIMER VISUAL */}
+      <div className="flex-1 flex flex-col items-center justify-center relative">
+        <div className="relative w-[80vmin] h-[80vmin] max-w-[600px] max-h-[600px]">
+          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+            {/* Background Track */}
+            <circle cx="50" cy="50" r={radius} stroke="#1e293b" strokeWidth="4" fill="transparent" />
+            
+            {/* Progress Ring (Filling Up) */}
+            <circle
+              cx="50" cy="50" r={radius}
+              stroke={ringColor}
+              strokeWidth="4"
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeOffset} // De circumference (vacío) a 0 (lleno)
+              strokeLinecap="round"
+              className="transition-[stroke-dashoffset] duration-200 ease-linear"
+            />
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
+             <span className={`text-[18vmin] font-bold tabular-nums leading-none tracking-tight ${textColor} transition-colors duration-300`}>
+                {mode === 'STOPWATCH' ? formatTime(elapsedMs) : formatTime(remainingMs)}
+             </span>
+             
+             <div className={`mt-4 text-[4vmin] font-black uppercase tracking-widest ${labelColor} transition-colors duration-300`}>
+                {mode === 'STOPWATCH' ? 'TIEMPO' : (phase === 'work' ? 'WORK' : 'REST')}
+             </div>
+
+             {mode !== 'STOPWATCH' && (
+               <div className="mt-2 text-[2.5vmin] text-slate-500 font-medium">
+                  ROUND {round} <span className="text-slate-700">/</span> {config.rounds}
+               </div>
+             )}
+          </div>
+        </div>
+      </div>
+
+      {/* CONTROLS */}
+      <div className={`p-8 w-full flex justify-center gap-6 transition-opacity duration-300 z-20 ${(running && isFullscreen) ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
+        <button onClick={reset} className="w-16 h-16 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 transition-all">
+          <RotateCcw size={24} />
+        </button>
+
+        <button onClick={togglePlay} className={`w-24 h-24 flex items-center justify-center rounded-full shadow-2xl transition-transform active:scale-95 ${running ? 'bg-slate-800 text-white' : 'bg-white text-slate-950'}`}>
+          {running ? <Pause size={40} fill="currentColor" /> : <Play size={40} fill="currentColor" className="ml-2" />}
+        </button>
+
+        <button onClick={skip} className="w-16 h-16 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 transition-all">
+          <SkipForward size={24} />
+        </button>
+        
+        <button onClick={toggleFullscreen} className="absolute right-6 bottom-10 md:static md:w-16 md:h-16 flex items-center justify-center rounded-full text-slate-500 hover:text-white transition-colors">
+          {isFullscreen ? <Minimize size={28} /> : <Maximize size={28} />}
+        </button>
+      </div>
+    </div>
   );
 }
