@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Dumbbell } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 // Usaremos los SVG que proporcionaste para las redes sociales, pero envueltos en un componente para mantener la consistencia
 const SocialIcon = ({ children, href }: { children: React.ReactNode, href: string }) => (
     <a href={href} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-emerald-400 transition-colors">
@@ -16,15 +16,13 @@ export const Footer = () => {
           
           {/* Brand Column */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
-                <Dumbbell className="w-5 h-5 text-white" />
+              <div className="flex items-center mb-6"> 
+                  <Logo variant="symbol" className="w-8 h-8" /> 
               </div>
-              <span className="text-xl font-bold text-white">Sporvit</span>
-            </div>
-            <p className="text-slate-400 text-sm">
-              Nutrición y entrenamiento perfectamente sincronizados con IA.
-            </p>
+              
+              <p className="text-slate-400 text-sm">
+                  Nutrición y entrenamiento perfectamente sincronizados con IA.
+              </p>
           </div>
 
           {/* Product Links */}
