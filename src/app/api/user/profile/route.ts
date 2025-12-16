@@ -1,62 +1,153 @@
+// ============================================
+// 3. app/api/user/profile/route.ts
+// ============================================
 
-// src/app/api/user/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// Esquema de validación del payload (debe ser el objeto completo del store)
-const profileSchema = z.object({
-  // Campos del store
-  name: z.string(),
-  gender: z.enum(['MALE', 'FEMALE']),
-  birthDate: z.string(),
-  heightCm: z.number(),
-  weightKg: z.number(),
-  activityLevel: z.string(),
-  goal: z.string(),
-  weeklyTarget: z.number(),
-  dietType: z.string(),
-  allergens: z.string().optional(),
-  restrictions: z.string().optional(),
-  // Campos calculados
-  bmr: z.number(),
-  tdee: z.number(),
-  targetCalories: z.number(),
-  proteinGrams: z.number(),
-  carbGrams: z.number(),
-  fatGrams: z.number(),
-});
-
-/**
- * POST /api/user/profile
- * Guarda el perfil completo del usuario en Firestore (Fase 6) o lo actualiza.
- */
-export async function POST(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const data = await req.json();
+    const session = await getServerSession(authOptions);
     
-    // 1. Validar datos
-    const validation = profileSchema.safeParse(data);
-    if (!validation.success) {
-      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      );
     }
 
-    const validatedData = validation.data;
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        profile: true,
+        goals: true
+      }
+    });
 
-    // TODO: En la FASE 6, aquí se agregará la lógica de guardar en Firestore:
-    // 1. Obtener el ID del usuario autenticado (si hay) o crear uno temporal.
-    // 2. Llamar a una función de la librería (ej: saveUserProfile(userId, validatedData)).
-    
-    console.log('API POST - Datos de perfil recibidos y validados:', validatedData.name, validatedData.targetCalories);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({ 
-        success: true, 
-        message: 'Perfil guardado (simulado)',
-        data: { targetCalories: validatedData.targetCalories } // Devolver algo útil
-    }, { status: 200 });
+    const profile = {
+      name: user.name || '',
+      email: user.email,
+      avatar: user.image || null,
+      phone: user.profile?.phone || '',
+      age: user.profile?.age || 0,
+      gender: user.profile?.gender || 'male',
+      height: user.profile?.heightCm || 0,
+      weight: user.profile?.currentWeight || 0,
+      bodyFat: user.profile?.bodyFatPercentage || 0,
+      activityLevel: user.profile?.activityLevel || 'moderate'
+    };
+
+    return NextResponse.json({ profile });
 
   } catch (error) {
-    console.error('Error en /api/user/profile:', error);
-    return NextResponse.json({ success: false, error: { message: 'Internal Server Error' } }, { status: 500 });
+    console.error('Get profile error:', error);
+    return NextResponse.json(
+      { error: 'Error al obtener perfil' },
+      { status: 500 }
+    );
   }
 }
-        
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { section, data } = body;
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { profile: true }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    if (section === 'personal') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { name: data.name }
+      });
+
+      await prisma.userProfile.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          age: data.age || 0,
+          gender: data.gender || 'male',
+          heightCm: data.height || 0,
+          currentWeight: data.weight || 0,
+          bodyFatPercentage: data.bodyFat || 0,
+          activityLevel: data.activityLevel || 'moderate',
+          workoutDaysPerWeek: 0,
+          phone: data.phone || ''
+        },
+        update: {
+          phone: data.phone || '',
+          gender: data.gender
+        }
+      });
+    }
+
+    if (section === 'biometrics') {
+      await prisma.userProfile.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          age: data.age,
+          gender: data.gender || 'male',
+          heightCm: data.height,
+          currentWeight: data.weight,
+          bodyFatPercentage: data.bodyFat || null,
+          activityLevel: data.activityLevel,
+          workoutDaysPerWeek: 0
+        },
+        update: {
+          age: data.age,
+          heightCm: data.height,
+          currentWeight: data.weight,
+          bodyFatPercentage: data.bodyFat || null,
+          activityLevel: data.activityLevel
+        }
+      });
+
+      await prisma.weightEntry.create({
+        data: {
+          userId: user.id,
+          date: new Date(),
+          weight: data.weight,
+          bodyFat: data.bodyFat || null
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return NextResponse.json(
+      { error: 'Error al actualizar perfil' },
+      { status: 500 }
+    );
+  }
+}
