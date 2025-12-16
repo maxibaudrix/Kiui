@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -19,6 +18,10 @@ model User {
   name          String?
   image         String?
   password      String? // Para auth con credenciales
+  notifications   Notification[]
+  settings        UserSettings?
+  subscription    Subscription?
+  payments        Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,6 +172,7 @@ model UserProfile {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone String?
 
   // Biometrics
   age               Int
@@ -462,4 +466,102 @@ model DailyWater {
   glasses Int      @default(0)
 
   @@index([userId, date])
+}
+// ============================================
+// NOTIFICATION
+// ============================================
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String    // 'plan_ready', 'workout_reminder', 'meal_reminder', 'progress_update', 'subscription_activated', 'subscription_canceled'
+  message   String
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+// ============================================
+// USER SETTINGS
+// ============================================
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notificaciones
+  notificationsEmail            Boolean @default(true)
+  notificationsPush             Boolean @default(true)
+  notificationsWorkoutReminders Boolean @default(true)
+  notificationsMealReminders    Boolean @default(true)
+  notificationsWeeklyReport     Boolean @default(true)
+  
+  // Unidades
+  unitsWeight   String @default("kg")   // kg, lb
+  unitsHeight   String @default("cm")   // cm, in
+  unitsDistance String @default("km")   // km, mi
+  
+  // Apariencia
+  theme    String @default("dark")      // dark, light
+  language String @default("es")        // es, en, pt
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// AGREGAR MODELO SUBSCRIPTION
+// ============================================
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan                  String    @default("free") // free, premium
+  status                String    @default("inactive") // active, inactive, canceling, canceled
+  
+  // Stripe integration
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String?
+  
+  // Billing
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean   @default(false)
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([userId, status])
+}
+
+// ============================================
+// MODELO PAYMENT
+// ============================================
+
+model Payment {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount                Int      // En centavos (ej: 1299 = €12.99)
+  currency              String   @default("eur")
+  status                String   // paid, pending, failed, refunded
+  
+  stripePaymentIntentId String?  @unique
+  description           String?
+  
+  createdAt             DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([status])
 }
