@@ -1,7 +1,9 @@
-// Este archivo configura la URL de conexión para la CLI de Prisma (migrate, db push, etc.).
+// Este archivo de configuración es requerido por Prisma CLI v7.x para
+// comandos como `migrate dev`, ya que la URL de conexión se ha movido
+// fuera de `schema.prisma`.
 
-const config = {
-  // La CLI espera la configuración bajo la propiedad 'datasources'.
+export default {
+  // Contiene todas las fuentes de datos definidas en schema.prisma
   datasources: {
     // 'db' debe coincidir con el nombre de tu `datasource` en schema.prisma.
     db: {
@@ -9,5 +11,3 @@ const config = {
     },
   },
 };
-
-export default config;
