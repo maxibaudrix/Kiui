@@ -1,7 +1,7 @@
 // app/dashboard/layout.tsx
 
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { auth } from '@/auth';
 import HeaderBar from '@/components/ui/layout/dashboard/HeaderBar';
 import TopMetricsBar from '@/components/ui/layout/dashboard/TopMetricsBar';
 import Sidebar from '@/components/ui/layout/dashboard/Sidebar';

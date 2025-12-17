@@ -1,8 +1,6 @@
-// src/middleware.ts
-export { auth as middleware } from "@/auth";
+// middleware.ts
+export { auth as middleware } from "@/auth" 
 
 export const config = {
-  matcher: [
-    "/((?!api/auth|api/onboarding|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/dashboard/:path*", "/onboarding/:path*"],
 };

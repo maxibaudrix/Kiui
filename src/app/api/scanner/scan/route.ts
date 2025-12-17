@@ -1,6 +1,6 @@
 // src/app/api/scanner/scan/route.ts
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth';
+import { auth } from '@/auth';
 
 
 // Note: For production, you'll need to integrate a proper OCR service

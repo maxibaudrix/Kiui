@@ -40,23 +40,32 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, disabled, isLoading, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+    
+    // When asChild is true, we ONLY render the Slot with the direct child
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </Slot>
+      );
+    }
 
-    const safeChildren = React.isValidElement(children)
-      ? children
-      : <span className="inline-flex items-center gap-2">{children}</span>;
-
+    // Standard button logic (allows Loader + Text)
     return (
-     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
-      ref={ref}
-      disabled={disabled || isLoading}
-      {...props}
-    >
-      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {safeChildren}
-    </Comp>
-  );
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || isLoading}
+        {...props}
+      >
+        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {children}
+      </button>
+    );
   }
 );
 Button.displayName = "Button";

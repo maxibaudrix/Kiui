@@ -1,7 +1,7 @@
 // src/app/api/onboarding/[userId]/route.ts
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth'; // Reemplazar con la ruta correcta a tu configuración
+import { auth } from '@/auth'; // Reemplazar con la ruta correcta a tu configuración
 import { prisma } from '@/lib/db'; // Asumiendo que /lib/db.ts contiene la instancia de prisma
 
 /**

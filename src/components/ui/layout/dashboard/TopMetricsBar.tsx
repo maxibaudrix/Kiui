@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Flame, Activity, TrendingUp, Weight, Footprints, Edit2, Check, X } from 'lucide-react';
+import { Flame, Activity, TrendingUp, Scale, Footprints, Edit2, Check, X } from 'lucide-react';
 import { useUserMetrics } from '@/hooks/useUserMetrics';
 
 export default function TopMetricsBar() {
@@ -158,7 +158,7 @@ export default function TopMetricsBar() {
 
         {/* Peso */}
         <MetricCard
-          icon={Weight}
+          icon={Scale}
           label="Peso"
           value={metrics.weight}
           unit="kg"

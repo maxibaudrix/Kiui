@@ -1,6 +1,6 @@
 // src/  
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth'; // ⬅️ ¡CORRECCIÓN CLAVE! Importa 'auth' desde tu archivo de configuración
+import { auth } from '@/auth'; // ⬅️ ¡CORRECCIÓN CLAVE! Importa 'auth' desde tu archivo de configuración
 import prisma from '@/lib/prisma';
 import { offClient } from '@/lib/openfoodfacts/client';
 
