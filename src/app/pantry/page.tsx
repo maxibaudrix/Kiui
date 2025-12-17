@@ -4,9 +4,9 @@
 import React, { useState } from 'react';
 import AppShell from '@/components/shared/layout/AppShell';
 import { usePantryStore } from '@/store/pantry';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/Card';
 
 export default function PantryPage() {
   const { items, addItem, removeItem } = usePantryStore();

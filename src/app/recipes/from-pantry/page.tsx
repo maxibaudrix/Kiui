@@ -7,7 +7,7 @@ import { usePantryStore } from '@/store/pantry';
 import { Recipe } from '@/types/recipe';
 import { generateRecipesFromPantry } from '@/lib/recipeEngine/generateRecipe';
 import { RecipeCard } from '@/components/recipes/RecipeCard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 export default function RecipeGeneratorPage() {
   const { items } = usePantryStore();

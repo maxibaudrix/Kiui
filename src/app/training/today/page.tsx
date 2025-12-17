@@ -8,7 +8,7 @@ import { useUserStore } from '@/store/user';
 import { generateDailyWorkout } from '@/lib/trainingEngine/generateWorkout';
 import { WorkoutCard } from '@/components/training/WorkoutCard';
 import { ExerciseList } from '@/components/training/ExerciseList';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 export default function TrainingPage() {
   const { currentWorkout, setCurrentWorkout, completeWorkout } = useTrainingStore();

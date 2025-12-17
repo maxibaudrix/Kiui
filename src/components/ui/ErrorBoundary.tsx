@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { AlertTriangle, Home, RotateCw } from 'lucide-react';
-import { Button } from '@/components/ui/button'; 
+import { Button } from '@/components/ui/Button'; 
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;

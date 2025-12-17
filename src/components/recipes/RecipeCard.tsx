@@ -2,7 +2,7 @@
 import React from 'react';
 import { Recipe } from '@/types/recipe';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Asegúrate de que Card exista en UI fase 2
-import { Button } from '@/components/ui/button'; // Asegúrate de que Button exista
+import { Button } from '@/components/ui/Button'; // Asegúrate de que Button exista
 import { formatCalories } from '@/lib/utils/formatCalories'; // De fase 3
 
 interface RecipeCardProps {

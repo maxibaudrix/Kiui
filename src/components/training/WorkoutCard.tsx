@@ -2,7 +2,7 @@
 import React from 'react';
 import { Workout } from '@/types/training';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Clock, Trophy, BarChart } from 'lucide-react';
 
 interface WorkoutCardProps {

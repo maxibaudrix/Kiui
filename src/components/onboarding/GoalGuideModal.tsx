@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Target, Clock, BookOpen, AlertCircle, TrendingDown, TrendingUp, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Asumiendo que tienes un componente Button
+import { Button } from '@/components/ui/Button'; // Asumiendo que tienes un componente Button
 
 interface GoalGuideModalProps {
   isOpen: boolean;

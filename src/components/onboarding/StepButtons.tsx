@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { ArrowLeft, ArrowRight, Loader2, Check } from 'lucide-react';
 
 interface StepButtonsProps {

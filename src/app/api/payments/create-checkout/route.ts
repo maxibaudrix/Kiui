@@ -1,6 +1,8 @@
 // ============================================
 // app/api/payments/create-checkout/route.ts
 // ============================================
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
 export async function POST(request: NextRequest) {
   try {

@@ -2,7 +2,7 @@
 // WEBHOOK DE STRIPE (para confirmar pagos)
 // app/api/webhooks/stripe/route.ts
 // ============================================
-
+import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {

@@ -2,6 +2,7 @@
 // lib/rate-limiter.ts
 // Simple rate limiting
 // ============================================
+import { NextResponse } from 'next/server';
 
 interface RateLimitEntry {
   count: number;
