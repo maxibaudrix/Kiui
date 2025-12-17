@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, TrendingUp, Dumbbell, Utensils, Activity, AlertCircle, Edit, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, TrendingUp, Dumbbell, Utensils, Activity, AlertCircle, Edit, Loader2, Calendar } from 'lucide-react';
 
 // 1. DEFINE TYPES FOR COMPLEX OBJECTS (Phases and Macros)
 interface PlanningPhases {
@@ -41,7 +41,13 @@ interface CalculationsResult {
 
 export default function Step6ReviewPage() {
   const router = useRouter();
+  const [startDate, setStartDate] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Calcular fecha mínima (hoy) y máxima (30 días desde hoy)
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  const maxDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   // Mock data - En producción vendría del store/context
   const mockOnboardingData = {
@@ -100,16 +106,25 @@ export default function Step6ReviewPage() {
   }, []);
 
   const handleGeneratePlan = async () => {
-  setIsGenerating(true);
+    if (!startDate) return;
+    
+    setIsGenerating(true);
 
-  // Simulación de generación
-  await new Promise((res) => setTimeout(res, 3000));
+    // Datos a enviar al backend
+    const planningPayload = {
+      onboardingData: mockOnboardingData,
+      calculations,
+      startDate, // ISO string: "2025-01-20"
+    };
 
-  console.log('Plan generated');
+    console.log('Planning payload:', planningPayload);
 
-  // TODO: aquí luego irá POST /api/onboarding/complete
-  router.push('/dashboard');
-};
+    // Simulación de generación
+    await new Promise((res) => setTimeout(res, 3000));
+
+    // TODO: POST /api/planning/init con planningPayload
+    router.push('/dashboard');
+  };
 
   const progress = 100;
 
@@ -371,6 +386,40 @@ export default function Step6ReviewPage() {
                 </div>
               </div>
             </div>
+            {/* Start Date Selector */}
+            <div className="bg-gradient-to-br from-emerald-900/20 to-slate-900/50 border border-emerald-500/30 rounded-xl p-6">
+              <div className="flex items-start gap-3">
+                <Calendar className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-grow">
+                  <div className="font-bold text-white mb-2">¿Cuándo quieres empezar?</div>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Selecciona la fecha en la que comenzará tu plan personalizado.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      min={minDate}
+                      max={maxDate}
+                      className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all w-full sm:w-auto"
+                    />
+                    {startDate && (
+                      <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>
+                          Inicio: {new Date(startDate + 'T00:00:00').toLocaleDateString('es-ES', { 
+                            weekday: 'long', 
+                            day: 'numeric', 
+                            month: 'long' 
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button onClick={() => router.push('/onboarding/step-5-diet')} disabled={isGenerating} className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
@@ -378,7 +427,7 @@ export default function Step6ReviewPage() {
                 Volver
               </button>
               
-              <button onClick={handleGeneratePlan} disabled={isGenerating} className="flex-grow bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-4 px-8 rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:scale-100">
+              <button onClick={handleGeneratePlan} disabled={isGenerating || !startDate} className="flex-grow bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-4 px-8 rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:scale-100">
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-6 h-6 animate-spin" />
