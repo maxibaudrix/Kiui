@@ -1,7 +1,7 @@
 // src/app/api/nutrition/log/route.ts
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import NextAuth from 'next-auth';ib/auth/auth-options'
+import NextAuth from 'next-auth';
 import prisma  from '@/lib/prisma'
 
 export async function POST(request: Request) {

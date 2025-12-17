@@ -26,7 +26,7 @@ export default function MonthlyCalendarWidget() {
       const res = await fetch(`/api/dashboard/workouts/month?year=${year}&month=${month}`);
       const data = await res.json();
       
-      const workoutDates = new Set(
+      const workoutDates = new Set<string>(
         data.workoutDays.map((d: string) => new Date(d).toDateString())
       );
       setDaysWithWorkouts(workoutDates);
