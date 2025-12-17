@@ -232,6 +232,23 @@ model UserGoals {
   updatedAt DateTime @updatedAt
 }
 
+model DailySteps {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   DateTime
+  steps  Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// Agregar a User model:
+dailySteps DailySteps[]
+
 // ============================================
 // PRODUCTS & NUTRITION
 // ============================================
