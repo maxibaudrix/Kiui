@@ -8,7 +8,8 @@ import {
   Target, Bell, Globe, Download, Trash2, Save, 
   Loader2, AlertTriangle, Shield, Moon, Sun
 } from 'lucide-react';
-import HeaderBar from '@/components/dashboard/HeaderBar';
+
+
 
 export default function SettingsPage() {
   const { data: session, status } = useSession();
@@ -133,8 +134,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <HeaderBar />
-      
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">

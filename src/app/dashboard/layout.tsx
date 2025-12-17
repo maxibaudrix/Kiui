@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import HeaderBar from '@/components/ui/layout/dashboard/HeaderBar';
+import { AppFooter } from '@/components/ui/layout/dashboard/AppFooter';
 import TopMetricsBar from '@/components/ui/layout/dashboard/TopMetricsBar';
 import Sidebar from '@/components/ui/layout/dashboard/Sidebar';
 
@@ -39,6 +40,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <AppFooter /> {/* Versión pequeña */}
     </div>
   );
 }

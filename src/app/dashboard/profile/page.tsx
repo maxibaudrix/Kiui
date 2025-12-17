@@ -4,8 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Camera, Save, Loader2, User, Activity, Calendar, Ruler, Weight } from 'lucide-react';
-import HeaderBar from '@/components/dashboard/HeaderBar';
+import { Camera, Save, Loader2, User, Activity, Calendar, Ruler, Scale } from 'lucide-react';
+
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
@@ -102,7 +102,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <HeaderBar />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
@@ -301,7 +300,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    <Weight className="w-4 h-4 inline mr-2" />
+                    <Scale className="w-4 h-4 inline mr-2" />
                     Peso (kg)
                   </label>
                   <input

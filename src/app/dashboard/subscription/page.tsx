@@ -8,7 +8,7 @@ import {
   Crown, Check, X, CreditCard, Calendar, FileText,
   Loader2, Sparkles, Zap, TrendingUp
 } from 'lucide-react';
-import HeaderBar from '@/components/ui/layout/dashboard/HeaderBar';
+
 
 export default function SubscriptionPage() {
   const { data: session, status } = useSession();
@@ -137,8 +137,6 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <HeaderBar />
-      
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">

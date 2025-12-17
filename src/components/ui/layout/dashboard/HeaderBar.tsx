@@ -270,25 +270,18 @@ const UserMenu = () => {
     return (
       <Component
         {...props}
+        // Si no hay href, nos aseguramos de no pasarlo o pasar un string vacío si es Link
+        href={props.href ?? undefined} 
         className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors text-left ${
           danger 
             ? 'hover:bg-red-500/10 text-red-400' 
             : 'hover:bg-slate-800 text-slate-300 hover:text-white'
         }`}
       >
-        <Icon className="w-4 h-4" />
-        <span className="text-sm font-medium flex-1">{label}</span>
-        {badge && (
-          <span className="px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded">
-            {badge}
-          </span>
-        )}
-        {hasSubmenu && (
-          <ChevronDown className={`w-3 h-3 transition-transform ${submenu === label.toLowerCase() ? 'rotate-180' : ''}`} />
-        )}
+        {/* contenido */}
       </Component>
     );
-  };
+    };
 
   const SubMenuItem = ({ label, href }) => (
     <Link
@@ -414,7 +407,7 @@ export default function HeaderBar() {
       <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         
         {/* Logo - Left */}
-        <Link href="/" className="flex-shrink-0">
+        <Link href="/dasboard" className="flex-shrink-0">
           <Logo size="sm" />
         </Link>
 
