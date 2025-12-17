@@ -50,6 +50,7 @@ model User {
   diaryMeals      DiaryMeal[] // For DiaryMeal (new)
   plannedMeals    PlannedMeal[] // For PlannedMeal
   dailyWater      DailyWater[] // For DailyWater
+  dailySteps      DailySteps[]
 }
 
 model Account {
@@ -245,9 +246,6 @@ model DailySteps {
   @@unique([userId, date])
   @@index([userId, date])
 }
-
-// Agregar a User model:
-dailySteps DailySteps[]
 
 // ============================================
 // PRODUCTS & NUTRITION
