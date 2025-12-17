@@ -27,8 +27,10 @@ export default function NotFound() {
             </Link>
           </Button>
           <Button onClick={() => window.history.back()} variant="secondary">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
+            <span className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver</span>
+            </span>
           </Button>
         </div>
       </div>

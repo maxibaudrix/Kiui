@@ -43,7 +43,7 @@ export default function Step6ReviewPage() {
   const router = useRouter();
   const [startDate, setStartDate] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   // Calcular fecha mínima (hoy) y máxima (30 días desde hoy)
   const today = new Date();
   const minDate = today.toISOString().split('T')[0];
@@ -423,24 +423,26 @@ export default function Step6ReviewPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button onClick={() => router.push('/onboarding/step-5-diet')} disabled={isGenerating} className="px-6 py-3 bg-slate-900 border-2 border-slate-700 text-slate-300 font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                <ArrowLeft className="w-5 h-5" />
-                Volver
+                <span className="flex items-center justify-center gap-2"> {/* <-- Único Hijo */}
+                  <ArrowLeft className="w-5 h-5" />
+                  Volver
+                </span>
               </button>
               
               <button onClick={handleGeneratePlan} disabled={isGenerating || !startDate} className="flex-grow bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-4 px-8 rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:hover:scale-100">
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <span>Generando plan...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-6 h-6" />
-                    <span>Generar Mi Plan</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+                {isGenerating ? (
+                  <span className="flex items-center justify-center gap-3"> {/* ÚNICO HIJO */}
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Generando plan...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-3"> {/* ÚNICO HIJO */}
+                    <Sparkles className="w-6 h-6" />
+                    <span>Generar Mi Plan</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </span>
+                )}
+              </button>
             </div>
 
             {isGenerating && (
