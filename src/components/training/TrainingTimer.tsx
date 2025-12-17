@@ -221,7 +221,11 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
   const currentTotal = phase === 'work' ? config.work * 1000 : config.rest * 1000;
   
   // LÓGICA DE PROGRESO: 0 (vacío) -> 1 (lleno)
-  const progress = mode === 'STOPWATCH' ? 0 : 1 - (remainingMs / currentTotal);
+  const progress =
+  mode === 'STOPWATCH' || currentTotal === 0
+    ? 0
+    : Math.min(1, Math.max(0, 1 - remainingMs / currentTotal));
+
   
   // Para llenar el círculo, reducimos el offset desde 'circumference' hasta '0'
   const strokeOffset = circumference * (1 - progress);
@@ -317,7 +321,7 @@ export default function TrainingTimer({ embedded = false, onClose }: Props) {
               strokeDasharray={circumference}
               strokeDashoffset={strokeOffset} // De circumference (vacío) a 0 (lleno)
               strokeLinecap="round"
-              className="transition-[stroke-dashoffset] duration-200 ease-linear"
+              className="will-change-[stroke-dashoffset]"
             />
           </svg>
 
