@@ -1,7 +1,7 @@
 // src/components/dashboard/MacrosChart.tsx
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatMacros } from '@/utils/formatMacros';
+import { formatMacros } from '@/lib/utils/formatMacros';
 
 interface MacroData {
   current: number;

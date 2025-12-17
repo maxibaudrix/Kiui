@@ -1,6 +1,6 @@
 // src/components/ui/progress.tsx
 import * as React from "react";
-import { cn } from "@/utils/cn"; // Utility para unir clases de Tailwind
+import { cn } from "@/lib/utils/cn"; // Utility para unir clases de Tailwind
 
 interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number;

@@ -1,7 +1,7 @@
 // src/tests/calculations.test.ts
 import { describe, it, expect } from 'vitest';
 // NOTA: Asumimos que calculateBalance.ts existe en src/utils
-import { calculateBalance } from '../utils/calculateBalance';
+import { calculateBalance } from '../lib/utils/calculateBalance';
 
 describe('calculateBalance', () => {
   const TARGET = 2000;

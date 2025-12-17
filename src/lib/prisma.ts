@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 const prismaClientSingleton = () => {
   return new PrismaClient();
 };
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
 // Extiende el objeto global (globalThis) con una propiedad 'prisma' opcional.
 // Esto es para almacenar la instancia del cliente en desarrollo.
@@ -14,8 +17,8 @@ declare global {
 }
 
 // Utiliza la instancia global si existe (en desarrollo), o crea una nueva.
-const prisma = globalThis.prisma ?? prismaClientSingleton();
 
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 // En desarrollo, guarda la instancia en el objeto global para que el HMR la reutilice.
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prisma = prisma;

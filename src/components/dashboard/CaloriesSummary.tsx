@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/Progress';
 import { Flame, Utensils, Target } from 'lucide-react';
-import { calculateBalance } from '@/utils/calculateBalance';
+import { calculateBalance } from '@/lib/utils/calculateBalance';
 
 interface CaloriesSummaryProps {
   consumed: number;

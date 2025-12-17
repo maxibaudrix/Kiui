@@ -1,5 +1,5 @@
 // src/lib/utils/normalize.ts
-import { ACTIVITY_LEVEL_MAP, GOAL_MAP } from '../lib/constants/onboarding';
+import { ACTIVITY_LEVEL_MAP, GOAL_MAP } from '../constants/onboarding';
 
 export const normalizeActivityLevel = (
   level: string
