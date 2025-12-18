@@ -201,7 +201,7 @@ async function getPhaseForDate(
   userId: string,
   date: Date
 ): Promise<string | null> {
-  const WeeklyPlan = await prisma.WeeklyPlan.findFirst({
+  const weeklyPlan = await prisma.weeklyPlan.findFirst({
     where: {
       userId,
       startDate: {
@@ -213,8 +213,8 @@ async function getPhaseForDate(
     },
   });
 
-  if (!WeeklyPlan) return null;
+  if (!weeklyPlan) return null;
 
-  const planData = JSON.parse(WeeklyPlan.planJson);
+  const planData = JSON.parse(weeklyPlan.planJson);
   return planData.phase || null;
 }

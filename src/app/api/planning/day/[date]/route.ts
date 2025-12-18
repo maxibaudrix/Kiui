@@ -106,7 +106,7 @@ export async function GET(
           return mealExecutions.some(me => me.mealType === dayData.nutrition.meals[index].mealType);
         }),
         waterGlasses: 0, // TODO: Implementar tracking de agua
-        notes: workoutExecution?.notes || undefined,
+        notes: undefined,
       },
     };
 

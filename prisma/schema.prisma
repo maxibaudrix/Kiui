@@ -51,6 +51,7 @@ model User {
   plannedMeals    PlannedMeal[] // For PlannedMeal
   dailyWater      DailyWater[] // For DailyWater
   dailySteps      DailySteps[]
+  weeklyPlans     WeeklyPlan[]
 }
 
 model Account {
@@ -448,6 +449,27 @@ model Recipe {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+// ============================================\
+// WEEKLY PLAN
+// ============================================\
+
+model WeeklyPlan {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  weekNumber Int
+  startDate  DateTime
+  endDate    DateTime
+  planJson   String
+  status     String   @default("active")
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, weekNumber])
+  @@index([userId, startDate])
 }
 
 // ============================================\

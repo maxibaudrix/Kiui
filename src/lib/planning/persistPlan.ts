@@ -33,7 +33,7 @@ export async function persistPlan(
       // 2. Guardar cada semana del plan
       for (const week of planOutput.weeks) {
         // Guardar resumen de semana
-        const weeklyPlan = await tx.WeeklyPlan.create({
+        const weeklyPlan = await tx.weeklyPlan.create({
           data: {
             userId,
             weekNumber: week.weekNumber,
@@ -66,13 +66,14 @@ export async function persistPlan(
           for (const meal of day.nutrition.meals) {
             await tx.meal.create({
               data: {
-                userId,
+                user: { connect: { id: userId } },
                 date: new Date(day.date),
                 mealType: meal.mealType,
                 totalCalories: meal.calories,
                 totalProteinG: meal.protein,
                 totalCarbsG: meal.carbs,
                 totalFatG: meal.fat,
+                totalFiberG: meal.fiber || 0,
                 notes: `${meal.name}\n${meal.description || ""}`,
               },
             });
@@ -115,7 +116,7 @@ export async function persistPlan(
       await tx.userGoals.upsert({
         where: { userId },
         create: {
-          userId,
+          user: { connect: { id: userId } },
           goalType: context.objective.primaryGoal,
           targetWeight: context.biometrics.weight, // Placeholder
           targetDate: context.objective.targetDate
@@ -125,6 +126,7 @@ export async function persistPlan(
           targetProteinG: context.targets.macros.protein,
           targetCarbsG: context.targets.macros.carbs,
           targetFatG: context.targets.macros.fat,
+          targetFiberG: context.targets.macros.fiber || 30,
           bmr: 0, // Se puede calcular después
           tdee: 0, // Se puede calcular después
           dietType: context.nutrition.dietType,
@@ -140,6 +142,7 @@ export async function persistPlan(
           targetProteinG: context.targets.macros.protein,
           targetCarbsG: context.targets.macros.carbs,
           targetFatG: context.targets.macros.fat,
+          targetFiberG: context.targets.macros.fiber || 30,
           dietType: context.nutrition.dietType,
           allergies: JSON.stringify(context.nutrition.allergies),
           updatedAt: new Date(),
