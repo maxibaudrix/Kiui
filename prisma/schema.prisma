@@ -275,7 +275,6 @@ model ScannedProduct {
   fatG           Float?
   fiberG         Float?
   saltG          Float?
-  fiberG         Float?
 
   // User serving
   servingSizeG Float?
