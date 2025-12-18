@@ -1,23 +1,18 @@
 // ============================================
-// PLANNING TYPES - UserPlanningContext & AI Outputs
+// USER PLANNING CONTEXT (CONTRATO PRINCIPAL)
 // ============================================
 
-/**
- * UserPlanningContext - Snapshot inmutable del onboarding
- * Este objeto se guarda UNA sola vez y NO se modifica después.
- * Es la única entrada para la generación del plan mediante AI.
- */
 export interface UserPlanningContext {
   meta: {
     userId: string;
     createdAt: string; // ISO 8601
-    version: string; // "1.0.0"
-    locale: string; // "es-ES"
+    version: "1.0";
+    locale: string;
   };
 
   startPreferences: {
-    startDate: string; // ISO 8601 (e.g., "2025-01-20")
-    weekStartsOn: "monday" | "sunday";
+    startDate: string; // ISO 8601
+    weekStartsOn: "monday";
   };
 
   biometrics: {
@@ -25,115 +20,102 @@ export interface UserPlanningContext {
     gender: "male" | "female" | "other";
     weight: number; // kg
     height: number; // cm
-    bodyFatPercentage?: number; // opcional
+    bodyFatPercentage?: number;
   };
 
   objective: {
-    primaryGoal:
-      | "lose_fat"
-      | "gain_muscle"
-      | "recomposition"
-      | "maintain"
-      | "performance";
-    targetTimeline: number; // semanas (4, 8, 12, 16)
+    primaryGoal: "cut" | "bulk" | "maintain" | "recomp" | "performance";
+    targetTimeline: number; // semanas
     hasCompetition: boolean;
-    competitionType?: string; // "10k", "triathlon_sprint", "powerlifting", etc.
+    competitionType?: string;
     targetDate?: string; // ISO 8601
-    motivation?: string; // texto libre
+    motivation?: string;
   };
 
   activity: {
-    country: string; // "ES", "US", etc.
-    timezone: string; // "Europe/Madrid"
+    country: string;
+    timezone: string;
     dailyActivityLevel: "sedentary" | "light" | "moderate" | "active";
-    dailySteps?: number; // promedio
-    availableDays: (
-      | "monday"
-      | "tuesday"
-      | "wednesday"
-      | "thursday"
-      | "friday"
-      | "saturday"
-      | "sunday"
-    )[]; // días disponibles para entrenar
-    preferredTimes: ("morning" | "afternoon" | "evening" | "night")[]; // horarios preferidos
+    dailySteps: "under-3k" | "3k-6k" | "6k-10k" | "10k-plus";
+    availableDays: string[]; // ["monday", "wednesday", "friday"]
+    preferredTimes: string[]; // ["morning", "evening"]
   };
 
   training: {
     experienceLevel: "beginner" | "intermediate" | "advanced";
-    sportType:
-      | "running"
-      | "cycling"
-      | "swimming"
-      | "triathlon"
-      | "strength"
-      | "crossfit"
-      | "general_fitness";
-    sportSubtype?: string; // "road_cycling", "olympic_triathlon", etc.
-    daysPerWeek: number; // 2, 3, 4, 5, 6
-    sessionDuration: number; // minutos (30, 45, 60, 90)
-    trainingLocation: ("gym" | "home" | "outdoor" | "pool")[];
-    availableEquipment: (
-      | "dumbbells"
-      | "barbell"
-      | "bench"
-      | "squat_rack"
-      | "pull_up_bar"
-      | "resistance_bands"
-      | "bike"
-      | "treadmill"
-      | "none"
-    )[];
+    sportType: string;
+    sportSubtype?: string;
+    daysPerWeek: number;
+    sessionDuration: number; // minutos
+    trainingLocation: string[]; // ["gym", "home"]
+    availableEquipment: string[]; // ["dumbbells", "barbell"]
     hasInjuries: boolean;
-    injuryDetails?: string; // texto libre
+    injuryDetails?: string;
   };
 
   nutrition: {
-    dietType:
-      | "omnivore"
-      | "vegetarian"
-      | "vegan"
-      | "flexitarian"
-      | "ketogenic"
-      | "mediterranean"
-      | "paleo";
-    mealsPerDay: number; // 2, 3, 4, 5
-    allergies: string[]; // ["nuts", "shellfish", etc.]
-    intolerances: string[]; // ["lactose", "gluten", etc.]
-    excludedFoods: string[]; // ["fish", "dairy", etc.]
-    cookingFrequency: "never" | "rarely" | "sometimes" | "often" | "always";
+    dietType: string;
+    mealsPerDay: number;
+    allergies: string[];
+    intolerances: string[];
+    excludedFoods: string[];
+    cookingFrequency: string;
   };
 
   targets: {
     calories: {
-      trainingDay: number; // kcal
-      restDay: number; // kcal
+      trainingDay: number;
+      restDay: number;
     };
     macros: {
       protein: number; // gramos
       carbs: number; // gramos
       fat: number; // gramos
-      fiber: number; // gramos
+      fiber?: number; // gramos
     };
   };
 
   planning: {
-    blockSize: number; // semanas por bloque (típicamente 4)
-    totalBlocks: number; // número de bloques (típicamente 3)
+    blockSize: number; // semanas por bloque
+    totalBlocks: number;
     phases: {
-      base: number; // semanas en fase base
-      build: number; // semanas en fase build
-      peak: number; // semanas en fase peak
-      taper: number; // semanas en fase taper
-      recovery: number; // semanas en fase recovery
+      base: number; // semanas
+      build: number;
+      peak: number;
+      taper: number;
+      recovery: number;
     };
   };
 }
 
-/**
- * CompletePlanningOutput - Output completo de la generación AI
- * Contiene TODAS las semanas del plan con workouts y meals
- */
+// ============================================
+// CALCULATION RESULT (OUTPUT DE CÁLCULOS)
+// ============================================
+
+export interface CalculationResult {
+  trainingDayCalories: number;
+  restDayCalories: number;
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+  blockSize: number;
+  totalBlocks: number;
+  phases: {
+    base: number;
+    build: number;
+    peak: number;
+    taper: number;
+    recovery: number;
+  };
+}
+
+// ============================================
+// COMPLETE PLANNING OUTPUT (RESPUESTA DE AI)
+// ============================================
+
 export interface CompletePlanningOutput {
   totalWeeks: number;
   startDate: string; // ISO 8601
@@ -143,9 +125,9 @@ export interface CompletePlanningOutput {
 }
 
 export interface WeekPlan {
-  weekNumber: number; // 1, 2, 3... 12
-  startDate: string; // ISO 8601 (lunes)
-  endDate: string; // ISO 8601 (domingo)
+  weekNumber: number;
+  startDate: string; // ISO 8601
+  endDate: string; // ISO 8601
   phase: "base" | "build" | "peak" | "taper" | "recovery";
   days: DayPlan[];
   weeklyStats: WeeklyStats;
@@ -153,14 +135,7 @@ export interface WeekPlan {
 
 export interface DayPlan {
   date: string; // ISO 8601
-  dayOfWeek:
-    | "monday"
-    | "tuesday"
-    | "wednesday"
-    | "thursday"
-    | "friday"
-    | "saturday"
-    | "sunday";
+  dayOfWeek: string; // "monday", "tuesday", etc.
   dayNumber: number; // 1-7
   isTrainingDay: boolean;
   workout?: WorkoutPlan;
@@ -169,60 +144,43 @@ export interface DayPlan {
 
 export interface WorkoutPlan {
   type: "strength" | "cardio" | "hiit" | "rest" | "active_recovery";
-  phase: "base" | "build" | "peak" | "taper" | "recovery";
-  focus?:
-    | "full_body"
-    | "upper"
-    | "lower"
-    | "push"
-    | "pull"
-    | "legs"
-    | "cardio_endurance"
-    | "cardio_intervals";
+  phase: string;
+  focus?: "full_body" | "upper" | "lower" | "push" | "pull";
   duration: number; // minutos
-  intensity: "low" | "moderate" | "high" | "very_high";
-  description?: string;
-  exercises: Exercise[];
+  intensity: "low" | "moderate" | "high";
+  description: string;
+  exercises?: Exercise[];
   warmup?: {
     description: string;
-    duration: number; // minutos
+    duration: number;
   };
   cooldown?: {
     description: string;
-    duration: number; // minutos
+    duration: number;
   };
   notes?: string;
 }
 
 export interface Exercise {
   name: string;
-  category: "compound" | "isolation" | "cardio" | "mobility";
-  muscleGroup:
-    | "chest"
-    | "back"
-    | "legs"
-    | "shoulders"
-    | "arms"
-    | "core"
-    | "full_body"
-    | "cardio";
+  category: "compound" | "isolation" | "cardio";
+  muscleGroup: string;
   sets: number;
-  reps: number | string; // número o "AMRAP", "12-15", etc.
+  reps: number | string; // puede ser "AMRAP", "12-15", etc.
   rest: number; // segundos
-  tempo?: string; // "2-0-2-0" (eccentric-pause-concentric-pause)
-  weight?: string; // "RPE 8", "60% 1RM", "bodyweight"
+  tempo?: string; // "2-0-2-0"
   notes?: string;
-  videoId?: string; // YouTube ID o link
+  videoId?: string;
 }
 
 export interface NutritionPlan {
   targetCalories: number;
-  targetProtein: number; // gramos
-  targetCarbs: number; // gramos
-  targetFat: number; // gramos
-  targetFiber: number; // gramos
+  targetProtein: number;
+  targetCarbs: number;
+  targetFat: number;
+  targetFiber: number;
   meals: MealPlan[];
-  hydration: {
+  hydration?: {
     targetWater: number; // ml
     notes?: string;
   };
@@ -230,27 +188,27 @@ export interface NutritionPlan {
 
 export interface MealPlan {
   mealType: "breakfast" | "lunch" | "dinner" | "snack_1" | "snack_2";
-  timing?: string; // "07:00", "13:00", etc. (sugerido)
+  timing?: string; // "07:00"
   name: string;
   description?: string;
   calories: number;
-  protein: number; // gramos
-  carbs: number; // gramos
-  fat: number; // gramos
-  fiber: number; // gramos
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
   ingredients: Ingredient[];
-  instructions: string[]; // pasos de preparación
+  instructions?: string[];
   prepTime?: number; // minutos
   cookTime?: number; // minutos
   difficulty?: "easy" | "medium" | "hard";
-  tags?: string[]; // ["high_protein", "quick", "meal_prep", "vegetarian"]
+  tags?: string[]; // ["high_protein", "quick", "meal_prep"]
 }
 
 export interface Ingredient {
   name: string;
   amount: number;
-  unit: "g" | "ml" | "unidad" | "taza" | "cucharada" | "cucharadita";
-  notes?: string; // "opcional", "al gusto", etc.
+  unit: "g" | "ml" | "unidad" | "taza" | "cucharada";
+  notes?: string;
 }
 
 export interface WeeklyStats {
@@ -262,7 +220,7 @@ export interface WeeklyStats {
   trainingDays: number;
   restDays: number;
   totalTrainingMinutes: number;
-  avgIntensity: "low" | "moderate" | "high";
+  avgIntensity: string;
 }
 
 export interface OverallStats {
@@ -279,152 +237,95 @@ export interface OverallStats {
   };
 }
 
-/**
- * PlanSkeleton - Estructura ligera para carga inicial del dashboard
- * Solo contiene lo mínimo necesario para renderizar el calendario
- */
+// ============================================
+// SKELETON (ESTRUCTURA LIGERA PARA DASHBOARD)
+// ============================================
+
 export interface PlanSkeleton {
   totalWeeks: number;
   currentWeek: number;
-  startDate: string; // ISO 8601
-  endDate: string; // ISO 8601
+  startDate: string;
+  endDate: string;
   skeleton: WeekSkeleton[];
 }
 
 export interface WeekSkeleton {
   weekNumber: number;
-  startDate: string; // ISO 8601
-  endDate: string; // ISO 8601
-  phase: "base" | "build" | "peak" | "taper" | "recovery";
+  startDate: string;
+  endDate: string;
+  phase: string;
   days: DaySkeleton[];
 }
 
 export interface DaySkeleton {
-  date: string; // ISO 8601
-  dayOfWeek:
-    | "monday"
-    | "tuesday"
-    | "wednesday"
-    | "thursday"
-    | "friday"
-    | "saturday"
-    | "sunday";
+  date: string;
+  dayOfWeek: string;
   hasWorkout: boolean;
-  workoutType?: "strength" | "cardio" | "hiit" | "rest" | "active_recovery";
-  workoutDuration?: number; // minutos
+  workoutType?: string;
+  workoutDuration?: number;
   targetCalories: number;
 }
 
-/**
- * DayDetail - Detalles completos de un día específico
- * Se carga bajo demanda cuando el usuario clickea un día
- */
+// ============================================
+// DAY DETAIL (DETALLE COMPLETO DE UN DÍA)
+// ============================================
+
 export interface DayDetail {
-  date: string; // ISO 8601
-  dayOfWeek:
-    | "monday"
-    | "tuesday"
-    | "wednesday"
-    | "thursday"
-    | "friday"
-    | "saturday"
-    | "sunday";
+  date: string;
+  dayOfWeek: string;
   weekNumber: number;
-  phase: "base" | "build" | "peak" | "taper" | "recovery";
+  phase: string;
   workout?: WorkoutDetail;
   nutrition: NutritionDetail;
-  tracking: DayTracking;
+  tracking?: DayTracking;
 }
 
-export interface WorkoutDetail {
-  id: string; // DB ID
-  type: "strength" | "cardio" | "hiit" | "rest" | "active_recovery";
-  focus?:
-    | "full_body"
-    | "upper"
-    | "lower"
-    | "push"
-    | "pull"
-    | "legs"
-    | "cardio_endurance"
-    | "cardio_intervals";
-  duration: number; // minutos
-  intensity: "low" | "moderate" | "high" | "very_high";
-  description?: string;
-  exercises: ExerciseDetail[];
-  warmup?: {
-    description: string;
-    duration: number;
-  };
-  cooldown?: {
-    description: string;
-    duration: number;
-  };
-  notes?: string;
+export interface WorkoutDetail extends WorkoutPlan {
+  id: string;
 }
 
-export interface ExerciseDetail {
-  id: string; // Para edición
-  name: string;
-  category: "compound" | "isolation" | "cardio" | "mobility";
-  muscleGroup: string;
-  sets: number;
-  reps: number | string;
-  rest: number; // segundos
-  tempo?: string;
-  weight?: string;
-  notes?: string;
-  videoId?: string;
-}
-
-export interface NutritionDetail {
-  targetCalories: number;
-  targetProtein: number;
-  targetCarbs: number;
-  targetFat: number;
-  targetFiber: number;
+export interface NutritionDetail extends NutritionPlan {
   meals: MealDetail[];
 }
 
-export interface MealDetail {
-  id: string; // DB ID
-  mealType: "breakfast" | "lunch" | "dinner" | "snack_1" | "snack_2";
-  timing?: string;
-  name: string;
-  description?: string;
-  macros: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    fiber: number;
-  };
-  ingredients: IngredientDetail[];
-  instructions: string[];
-  prepTime?: number;
-  cookTime?: number;
-  difficulty?: "easy" | "medium" | "hard";
-  tags?: string[];
-}
-
-export interface IngredientDetail {
-  name: string;
-  amount: number;
-  unit: string;
-  notes?: string;
+export interface MealDetail extends MealPlan {
+  id: string;
 }
 
 export interface DayTracking {
   workoutCompleted: boolean;
-  mealsCompleted: boolean[]; // array con estado de cada comida
+  mealsCompleted: boolean[];
   waterGlasses: number;
   notes?: string;
 }
 
-/**
- * Tipos para recalculos y validaciones
- */
-export interface DayMacrosResult {
+// ============================================
+// VALIDATION RESULT (RESULTADO DE VALIDACIONES)
+// ============================================
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+export interface ValidationError {
+  code: string;
+  message: string;
+  field?: string;
+}
+
+export interface ValidationWarning {
+  code: string;
+  message: string;
+  suggestion?: string;
+}
+
+// ============================================
+// MACROS CALCULATION RESULT
+// ============================================
+
+export interface MacrosCalculationResult {
   date: string;
   actual: {
     calories: number;
@@ -447,24 +348,4 @@ export interface DayMacrosResult {
     fat: number;
   };
   status: "on_track" | "under" | "over";
-}
-
-export interface MoveValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationWarning[];
-}
-
-export interface ValidationError {
-  code:
-    | "MAX_CONSECUTIVE"
-    | "MAX_WORKOUTS_PER_DAY"
-    | "REST_DAY_MANDATORY"
-    | "PREREQUISITE_MISSING";
-  message: string;
-}
-
-export interface ValidationWarning {
-  code: "PHASE_MISMATCH" | "INTENSITY_SPIKE" | "VOLUME_SPIKE";
-  message: string;
 }
