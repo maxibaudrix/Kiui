@@ -33,7 +33,7 @@ export async function persistPlan(
       // 2. Guardar cada semana del plan
       for (const week of planOutput.weeks) {
         // Guardar resumen de semana
-        const weeklyPlan = await tx.weeklyPlan.create({
+        const weeklyPlan = await tx.WeeklyPlan.create({
           data: {
             userId,
             weekNumber: week.weekNumber,

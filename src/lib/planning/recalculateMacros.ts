@@ -20,11 +20,11 @@ export async function recalculateDayMacros(
   // 2. Sumar macros de todas las comidas
   const actual = meals.reduce(
     (acc, meal) => ({
-      calories: acc.calories + meal.calories,
-      protein: acc.protein + meal.protein,
-      carbs: acc.carbs + meal.carbs,
-      fat: acc.fat + meal.fat,
-      fiber: acc.fiber + (meal.fiber || 0),
+    calories: acc.calories + meal.totalCalories,    // ✅
+    protein: acc.protein + meal.totalProteinG,      // ✅
+    carbs: acc.carbs + meal.totalCarbsG,            // ✅
+    fat: acc.fat + meal.totalFatG,                  // ✅
+    fiber: acc.fiber + 0,                           // ✅ (no existe en schema)
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
   );

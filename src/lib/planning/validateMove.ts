@@ -114,7 +114,7 @@ export async function validateMealMove(
 
   if (meal) {
     const totalCaloriesAfterMove =
-      mealsOnNewDate.reduce((sum, m) => sum + m.calories, 0) + meal.calories;
+      mealsOnNewDate.reduce((sum, m) => sum + m.totalCalories, 0) + meal.totalCalories
 
     // Obtener target del día
     const userGoals = await prisma.userGoals.findUnique({
@@ -201,7 +201,7 @@ async function getPhaseForDate(
   userId: string,
   date: Date
 ): Promise<string | null> {
-  const weeklyPlan = await prisma.weeklyPlan.findFirst({
+  const WeeklyPlan = await prisma.WeeklyPlan.findFirst({
     where: {
       userId,
       startDate: {
@@ -213,8 +213,8 @@ async function getPhaseForDate(
     },
   });
 
-  if (!weeklyPlan) return null;
+  if (!WeeklyPlan) return null;
 
-  const planData = JSON.parse(weeklyPlan.planJson);
+  const planData = JSON.parse(WeeklyPlan.planJson);
   return planData.phase || null;
 }

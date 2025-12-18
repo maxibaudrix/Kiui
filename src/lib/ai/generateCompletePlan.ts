@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { UserPlanningContext, CompletePlanningOutput } from "@/types/planning";
-import { getSystemPrompt, buildUserPrompt } from "./prompts/planningPrompts";
-import { parsePlanningResponse } from "./parsePlanningResponse";
+import { getSystemPrompt, buildUserPrompt } from "@/lib/ai/planningPrompts";
+import { parsePlanningResponse } from "@/lib/ai/parsePlanningResponse";
 
 /**
  * Genera un plan completo usando Google AI (Gemini)

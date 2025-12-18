@@ -224,6 +224,7 @@ model UserGoals {
   targetProteinG Int
   targetCarbsG   Int
   targetFatG     Int
+  targetFiberG   Int
 
   // Metrics
   bmr  Int
@@ -274,6 +275,7 @@ model ScannedProduct {
   fatG           Float?
   fiberG         Float?
   saltG          Float?
+  fiberG         Float?
 
   // User serving
   servingSizeG Float?
@@ -304,6 +306,7 @@ model Meal {
   totalProteinG Float
   totalCarbsG   Float
   totalFatG     Float
+  totalFiberG   Float
 
   notes String?
   createdAt DateTime @default(now())
@@ -439,6 +442,7 @@ model Recipe {
   protein Float // En gramos
   carbs   Float // En gramos
   fats    Float // En gramos
+  fiber   Float // En gramos
 
   favorited Boolean @default(false)
   rating    Int?
